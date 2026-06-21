@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "TTPro",
+    "slug": "ttpro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "tabletennisscorer",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "extra": {
+      "socketUrl": "http://10.0.2.2:3001",
+      "apiUrl": "http://10.0.2.2:3000",
+      "webUrl": "https://table-tennis-xi.vercel.app",
+      "googleWebClientId": "628815435887-ptv663s3v2vr5337ksefnllumm1phagu.apps.googleusercontent.com",
+      "googleIosClientId": "628815435887-ptv663s3v2vr5337ksefnllumm1phagu.apps.googleusercontent.com",
+      "googleAndroidClientId": "628815435887-mf93fmfhm64fmt3n2usbuplrah2sn91j.apps.googleusercontent.com",
+      "eas": {
+        "projectId": "2a6f733b-7e36-4165-be73-445d4471f2f0"
+      }
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.ttproapp",
+      "versionCode": 2,
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./favicon.ico",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow TTPro to scan tournament invite QR codes."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
