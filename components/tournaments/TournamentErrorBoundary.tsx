@@ -45,7 +45,7 @@ export class TournamentErrorBoundary extends Component<Props, State> {
           <Card style={styles.card}>
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Ionicons name="alert-triangle" size={24} color="#ef4444" />
+                <Ionicons name="warning" size={24} color="#ef4444" />
               </View>
               <Text style={styles.title}>Something went wrong</Text>
               <Text style={styles.description}>

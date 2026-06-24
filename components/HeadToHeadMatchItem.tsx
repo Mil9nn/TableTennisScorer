@@ -38,9 +38,9 @@ export default function HeadToHeadMatchItem({ match }: HeadToHeadMatchItemProps)
         </View>
         
         {/* Score */}
-        {match.score && (
-          <Text style={styles.scoreText}>{match.score}</Text>
-        )}
+        {match.score != null && match.score !== "" ? (
+          <Text style={styles.scoreText}>{String(match.score)}</Text>
+        ) : null}
       </Card.Content>
     </Card>
   );

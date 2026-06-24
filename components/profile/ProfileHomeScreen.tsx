@@ -121,6 +121,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#fee2e2",
     height: 45,
   },
+  deleteAccountButton: {
+    backgroundColor: DesignTokens.colors.background.primary,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    height: 45,
+    marginBottom: DesignTokens.spacing[3],
+  },
+  deleteAccountButtonText: {
+    color: DesignTokens.colors.error,
+  },
   accountButtonText: {
     fontSize: DesignTokens.typography.fontSize.sm,
     fontWeight: DesignTokens.typography.fontWeight.semibold,
@@ -532,6 +542,24 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
             { paddingBottom: Math.max(insets.bottom, DesignTokens.spacing[4]) },
           ]}
         >
+          <TouchableOpacity
+            style={[
+              styles.accountButton,
+              styles.deleteAccountButton,
+            ]}
+            onPress={() => router.push("/account-deletion")}
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
+          >
+            <Text
+              style={[
+                styles.accountButtonText,
+                styles.deleteAccountButtonText,
+              ]}
+            >
+              Delete account
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.accountButton,

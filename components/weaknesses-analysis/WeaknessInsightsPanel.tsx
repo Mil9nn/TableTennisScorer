@@ -34,7 +34,7 @@ export function WeaknessInsightsPanel({ insights }: WeaknessInsightsPanelProps) 
           <Card className="border-yellow-200 bg-yellow-50 flex-1">
             <View className="p-4 gap-2">
               <View className="flex-row items-start gap-3">
-                <Ionicons name="target" size={20} color="#ca8a04" />
+                <Ionicons name="locate" size={20} color="#ca8a04" />
                 <View className="flex-1 gap-1">
                   <Text className="font-semibold text-yellow-900 text-sm">
                     Secondary Weakness

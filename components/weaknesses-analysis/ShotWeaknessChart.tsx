@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, useWindowDimensions } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { BarChart } from "@/components/charts/BarChart";
 import { ShotWeaknessData } from "@/types/weaknesses.type";
@@ -17,6 +17,9 @@ export function ShotWeaknessChart({
   showTop = 10,
   variant = "weaknesses",
 }: ShotWeaknessChartProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const chartWidth = Math.max(screenWidth - 64, 280);
+
   // Filter and sort based on variant
   let displayData = [...shotWeaknesses];
 
@@ -70,6 +73,7 @@ export function ShotWeaknessChart({
       <View className="p-4">
         <BarChart
           data={chartData}
+          width={chartWidth}
           height={200}
           showGrid
           showValues

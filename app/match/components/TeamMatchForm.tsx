@@ -399,7 +399,7 @@ export default function TeamMatchForm({ endpoint }: Props) {
           onPress={handleSubmit(onSubmit)}
           disabled={
             isSubmitting ||
-            (showLineup && !lineup.validation.valid)
+            (Boolean(showLineup) && !lineup.validation.valid)
           }
           loading={isSubmitting}
           style={{

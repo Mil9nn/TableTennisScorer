@@ -38,6 +38,7 @@ export type HeadToHeadRow = {
   opponent: {
     _id: string;
     fullName?: string;
+    username?: string;
     profileImage?: string;
   };
   wins: number;

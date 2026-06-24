@@ -130,16 +130,16 @@ export function GroupsView({
     selectedGroupParticipants.length > 0
       ? [...participants, ...selectedGroupParticipants]
       : participants;
-  const participantById = useMemo(
-    () =>
-      new Map<string, Participant>(
-        mergedParticipants
-          .filter((participant) => participant && typeof participant === "object")
-          .map((participant) => [getParticipantId(participant), participant])
-          .filter(([id]) => Boolean(id)),
-      ),
-    [mergedParticipants],
-  );
+  const participantById = useMemo(() => {
+    const entries = mergedParticipants
+      .filter(
+        (participant): participant is Participant =>
+          Boolean(participant && typeof participant === "object"),
+      )
+      .map((participant) => [getParticipantId(participant), participant] as [string, Participant])
+      .filter((entry): entry is [string, Participant] => Boolean(entry[0]));
+    return new Map(entries);
+  }, [mergedParticipants]);
   const resolvedSelectedGroupStandings = useMemo(() => {
     const merged = new Map<string, any>();
 

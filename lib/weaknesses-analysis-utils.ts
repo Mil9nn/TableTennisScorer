@@ -855,13 +855,12 @@ export function calculateLineWeaknesses(
       };
 
       // Determine receiving side - handle both individual (side1/side2) and team (team1/team2) matches
-      let receivingSide: string;
+      let receivingSide: "side1" | "side2";
       if (shotSide === "side1" || shotSide === "team1") {
-        receivingSide = shotSide === "side1" ? "side2" : "team2";
+        receivingSide = "side2";
       } else if (shotSide === "side2" || shotSide === "team2") {
-        receivingSide = shotSide === "side2" ? "side1" : "team1";
+        receivingSide = "side1";
       } else {
-        // Fallback: default to side2 for individual matches
         receivingSide = "side2";
       }
       const placement = analyzeShotPlacement(shot, receivingSide);
@@ -963,13 +962,12 @@ export function calculateOriginDistanceWeaknesses(
       };
 
       // Determine receiving side based on shot side - handle both individual and team matches
-      let receivingSide: string;
+      let receivingSide: "side1" | "side2";
       if (shot.side === "side1" || shot.side === "team1") {
-        receivingSide = shot.side === "side1" ? "side2" : "team2";
+        receivingSide = "side2";
       } else if (shot.side === "side2" || shot.side === "team2") {
-        receivingSide = shot.side === "side2" ? "side1" : "team1";
+        receivingSide = "side1";
       } else {
-        // Fallback: default to side2 for individual matches
         receivingSide = "side2";
       }
       const placement = analyzeShotPlacement(shotForAnalysis, receivingSide);

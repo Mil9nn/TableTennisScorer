@@ -58,6 +58,22 @@ export interface TeamPlayerStats {
   winRate: number;
 }
 
+export interface TournamentPlayerStats {
+  rank: number;
+  player: PlayerData;
+  stats: {
+    tournamentMatchWins: number;
+    tournamentMatchLosses: number;
+    tournamentsWon: number;
+    tournamentsPlayed: number;
+    finalsReached: number;
+    semiFinalsReached: number;
+    tournamentSetDifferential: number;
+    totalTournamentPoints: number;
+    [key: string]: number;
+  };
+}
+
 export interface TeamStats {
   rank: number;
   team: TeamData;

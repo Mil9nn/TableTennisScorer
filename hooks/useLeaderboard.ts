@@ -38,7 +38,7 @@ export function useLeaderboard(
       const params = new URLSearchParams();
 
       // For Individual tab, add type filter if provided (not "all")
-      if (activeTab === "individual" && filters?.type && filters.type !== "all") {
+      if (activeTab === "individual" && filters?.type && filters.type !== ("all" as typeof filters.type)) {
         params.append("type", filters.type);
       }
 

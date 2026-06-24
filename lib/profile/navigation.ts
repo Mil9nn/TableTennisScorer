@@ -1,3 +1,5 @@
+import type { Href } from "expo-router";
+
 export type ProfileSection =
   | "match-history"
   | "head-to-head"
@@ -7,7 +9,7 @@ export type ProfileSection =
   | "insights"
   | "shots";
 
-export function profilePath(userId: string, section?: ProfileSection): string {
+export function profilePath(userId: string, section?: ProfileSection): Href {
   const safeUserId = encodeURIComponent(userId);
   return section
     ? `/profile/${safeUserId}/${encodeURIComponent(section)}`
@@ -17,7 +19,7 @@ export function profilePath(userId: string, section?: ProfileSection): string {
 export function headToHeadOpponentPath(
   userId: string,
   opponentId: string,
-): string {
+): Href {
   return `/profile/${encodeURIComponent(userId)}/head-to-head/${encodeURIComponent(opponentId)}`;
 }
 

@@ -345,7 +345,7 @@ export function PlayerStatsModal({
                             (detailedStats.serve.pointsWonOnServe /
                               detailedStats.serve.totalServes) *
                             100
-                          ).toFixed(1)}%`,
+                          ).toFixed(1)}%` as `${number}%`,
                         }}
                       />
                       <View className="flex-1 bg-rose-600" />

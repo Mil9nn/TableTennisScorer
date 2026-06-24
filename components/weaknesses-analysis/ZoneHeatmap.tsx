@@ -19,6 +19,7 @@ import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
 
 interface ZoneHeatmapProps {
   zoneData: ZoneWeaknessData;
+  viewMode?: string;
 }
 
 interface HoveredZone {
@@ -43,7 +44,7 @@ export function ZoneHeatmap({ zoneData }: ZoneHeatmapProps) {
   const CELL_HEIGHT = TABLE_HEIGHT / 10;
 
   // Calculate responsive SVG dimensions
-  const maxSvgWidth = screenWidth - Spacing.large * 2;
+  const maxSvgWidth = screenWidth - Spacing.lg * 2;
   const svgHeight = (maxSvgWidth / SVG_WIDTH) * SVG_HEIGHT;
 
   // Get color based on win rate
@@ -178,7 +179,7 @@ export function ZoneHeatmap({ zoneData }: ZoneHeatmapProps) {
                         fontSize="8"
                         fontWeight="bold"
                         textAnchor="middle"
-                        dominantBaseline="middle"
+                        alignmentBaseline="middle"
                         opacity="0.7"
                       >
                         {cell.totalShots}
@@ -193,7 +194,7 @@ export function ZoneHeatmap({ zoneData }: ZoneHeatmapProps) {
                         fill="#FFFFFF"
                         fontSize="6"
                         textAnchor="middle"
-                        dominantBaseline="middle"
+                        alignmentBaseline="middle"
                         opacity="0.5"
                       >
                         *

@@ -115,7 +115,7 @@ export default function TeamDetailPage() {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={tokens.colors.primary} />
+          <ActivityIndicator size="large" color={tokens.colors.primary[500]} />
         </View>
       </SafeAreaView>
     );

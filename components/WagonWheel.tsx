@@ -269,8 +269,8 @@ export default function WagonWheel({ shots, title, animateOnce = false }: WagonW
                   activeOpacity={0.7}
                   style={{
                     position: "absolute",
-                    left: (x2 / 548) * 100 + "%",
-                    top: (y2 / 305) * 100 + "%",
+                    left: `${(x2 / 548) * 100}%` as `${number}%`,
+                    top: `${(y2 / 305) * 100}%` as `${number}%`,
                     transform: [{ translateX: -(isHovered ? 7 : 4) }, { translateY: -(isHovered ? 7 : 4) }],
                   }}
                 >

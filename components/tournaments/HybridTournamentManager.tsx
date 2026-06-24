@@ -189,7 +189,7 @@ export function HybridTournamentManager({
                       <Text className="text-sm font-medium text-gray-900">
                         {group.groupName}
                       </Text>
-                      <Badge variant={group.isComplete ? "success" : "secondary"} size="sm">
+                      <Badge variant={group.isComplete ? "success" : "default"} size="sm">
                         {group.isComplete ? "Complete" : "In Progress"}
                       </Badge>
                     </View>

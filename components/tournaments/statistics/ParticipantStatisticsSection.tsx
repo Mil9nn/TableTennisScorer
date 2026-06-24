@@ -382,6 +382,9 @@ const modernStyles = StyleSheet.create({
     color: tokens.colors.primary[600],
     fontWeight: tokens.typography.fontWeight.medium,
   },
+  scrollView: {
+    flex: 1,
+  },
 
   participantsList: {
     gap: tokens.spacing[1],

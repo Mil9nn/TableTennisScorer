@@ -286,7 +286,7 @@ export default function CustomFormatScorer({
                       onPress={() => goToSubMatch(idx)}
                     >
                       <MatchTypeBadge
-                        matchType={sm.matchType}
+                        type={sm.matchType}
                         size="sm"
                       />
                       <Text
@@ -335,9 +335,8 @@ export default function CustomFormatScorer({
                 </Text>
                 <MatchStatusBadge
                   status={currentSubMatch.status as MatchStatus}
-                  size="sm"
                 />
-                <MatchTypeBadge matchType={currentSubMatch.matchType} size="sm" />
+                <MatchTypeBadge type={currentSubMatch.matchType} size="sm" />
               </View>
               <Text style={styles.subMatchPlayers}>
                 {teamMatchPlayers.side1.map((p) => p.name).join(" & ")} vs{" "}

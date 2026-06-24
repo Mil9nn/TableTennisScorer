@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DesignTokens } from "@/constants/designTokens";
 import { Avatar } from "@/components/ui/Avatar";
@@ -43,7 +43,7 @@ export const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
       </View>
       <View style={styles.contentCardBody}>
         <View style={styles.participantsGrid}>
-          {(tournament.participants || []).map((p, index) => {
+          {(tournament.participants || []).map((p: any, index: number) => {
             const seed = tournament.seeding?.find(
               (s: any) => s.participant?._id === p._id,
             );
@@ -65,8 +65,10 @@ export const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
               >
                 <Pressable
                   onPress={() => onParticipantPress(p)}
-                  style={styles.participantCardInner}
-                  activeOpacity={0.7}
+                  style={({ pressed }) => [
+                    styles.participantCardInner,
+                    pressed && { opacity: 0.7 },
+                  ]}
                 >
                   <View style={styles.participantAvatar}>
                     <Avatar src={image} alt={displayName} size={40} />
@@ -89,28 +91,28 @@ export const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   contentCard: {
     backgroundColor: tokens.colors.white,
   },
   contentCardHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: tokens.spacing[8],
     borderBottomWidth: 1,
     borderBottomColor: tokens.colors.border.light,
   },
   contentCardHeaderLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.spacing[8],
   },
   contentCardTitle: {
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.text.primary,
-    textTransform: 'uppercase' as const,
+    textTransform: "uppercase",
     letterSpacing: tokens.typography.letterSpacing.wide,
   },
   contentCardBadge: {
@@ -124,18 +126,16 @@ const styles = {
     color: tokens.colors.primary[600],
     fontWeight: tokens.typography.fontWeight.semibold,
   },
-  contentCardBody: {
-    
-  },
+  contentCardBody: {},
   participantsGrid: {
-    flexDirection: 'column' as const,
+    flexDirection: "column",
   },
   participantCard: {
-    minWidth: '45%',
+    minWidth: "45%",
   },
   participantCardInner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.spacing[6],
     padding: tokens.spacing[4],
     backgroundColor: tokens.colors.background.secondary,
@@ -170,4 +170,4 @@ const styles = {
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.primary[600],
   },
-};
+});

@@ -11,7 +11,7 @@ const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ID format"
 
 // Match types
 export const matchTypeSchema = z.enum(["singles", "doubles"], {
-  errorMap: () => ({ message: "Match type must be 'singles' or 'doubles'" }),
+  message: "Match type must be 'singles' or 'doubles'",
 });
 
 // Match status
@@ -92,7 +92,7 @@ export const updateMatchScoreSchema = z.object({
   playerIndex: z.number().int().min(0).max(3, "Player index must be between 0 and 3"),
 
   action: z.enum(["add", "undo"], {
-    errorMap: () => ({ message: "Action must be 'add' or 'undo'" }),
+    message: "Action must be 'add' or 'undo'",
   }),
 
   shotType: z.enum([
@@ -154,7 +154,7 @@ export const serverConfigSchema = z.object({
 // Swap players schema (for doubles)
 export const swapPlayersSchema = z.object({
   side: z.enum(["team1", "team2"], {
-    errorMap: () => ({ message: "Side must be 'team1' or 'team2'" }),
+    message: "Side must be 'team1' or 'team2'",
   }),
 }).strict();
 

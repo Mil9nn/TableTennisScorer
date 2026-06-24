@@ -16,6 +16,10 @@ interface AuthState {
   register: (data: RegisterForm) => Promise<{ requiresVerification?: boolean; message?: string }>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (data: {
+    confirmation: "DELETE";
+    password?: string;
+  }) => Promise<void>;
   user: User | null;
   setUser: (user: User | null) => void;
 }
@@ -152,5 +156,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     } finally {
       set({ authLoading: false });
     }
+  },
+
+  async deleteAccount({ confirmation, password }) {
+    await axiosInstance.post("auth/delete-account", {
+      confirmation,
+      password: password || undefined,
+    });
+    set({ user: null, authResolved: true, pendingVerificationEmail: null });
   },
 }));

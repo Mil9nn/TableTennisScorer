@@ -141,8 +141,9 @@ export function getSetScores(match: IndividualMatch): [number, number] {
   if (fs?.setsByTeam && fs.setsByTeam.length >= 2) {
     return [Number(fs.setsByTeam[0] ?? 0), Number(fs.setsByTeam[1] ?? 0)];
   }
-  if (fs?.side1Sets != null || fs?.side2Sets != null) {
-    return [Number(fs.side1Sets ?? 0), Number(fs.side2Sets ?? 0)];
+  const legacySets = fs as { side1Sets?: number; side2Sets?: number } | undefined;
+  if (legacySets?.side1Sets != null || legacySets?.side2Sets != null) {
+    return [Number(legacySets.side1Sets ?? 0), Number(legacySets.side2Sets ?? 0)];
   }
   if (fs?.setsById) {
     const ids = getScoringIds(match);

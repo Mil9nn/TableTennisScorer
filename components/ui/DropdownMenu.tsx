@@ -111,7 +111,6 @@ export function DropdownMenuContent({
       <Pressable
         style={styles.modalOverlay}
         onPress={() => setOpen(false)}
-        activeOpacity={1}
       >
         <View
           ref={contentRef}
@@ -240,10 +239,11 @@ export function DropdownMenuRadioGroup({
     <View style={styles.radioGroup}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, {
-            checked: child.props.value === value,
-            onSelect: () => onValueChange?.(child.props.value),
-          });
+          const item = child as React.ReactElement<{ value: string }>;
+          return React.cloneElement(item, {
+            checked: item.props.value === value,
+            onSelect: () => onValueChange?.(item.props.value),
+          } as Partial<{ value: string; checked?: boolean; onSelect?: () => void }>);
         }
         return child;
       })}

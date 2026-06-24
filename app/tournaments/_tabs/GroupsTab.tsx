@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DesignTokens } from "@/constants/designTokens";
 import { GroupsView } from "@/components/tournaments/GroupsView";
@@ -60,28 +60,28 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   contentCard: {
     backgroundColor: tokens.colors.white,
   },
   contentCardHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: tokens.spacing[8],
     borderBottomWidth: 1,
     borderBottomColor: tokens.colors.border.light,
   },
   contentCardHeaderLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.spacing[8],
   },
   contentCardTitle: {
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.text.primary,
-    textTransform: 'uppercase' as const,
+    textTransform: "uppercase",
     letterSpacing: tokens.typography.letterSpacing.wide,
   },
   contentCardBadge: {
@@ -96,7 +96,7 @@ const styles = {
     fontWeight: tokens.typography.fontWeight.semibold,
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: tokens.spacing[16],
   },
   emptyStateTitle: {
@@ -109,6 +109,6 @@ const styles = {
   emptyStateSubtitle: {
     fontSize: tokens.typography.fontSize.sm,
     color: tokens.colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
-};
+});

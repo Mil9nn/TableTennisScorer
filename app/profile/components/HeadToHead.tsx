@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, Image as ExpoImage, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, ActivityIndicator, Alert } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -318,8 +319,8 @@ export default function HeadToHeadPage() {
                           <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#666666', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>
                             Head-to-Head Record
                           </Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', fontFamily: 'monospace', fontSize: 20 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                               <Text style={{
                                 fontSize: 20,
                                 fontWeight: 'bold',
@@ -399,7 +400,7 @@ export default function HeadToHeadPage() {
                                 }) : ''}
                               </Text>
                             </View>
-                            <View style={{ alignItems: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
                               <View>
                                 <Text style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 'bold', color: '#353535' }}>
                                   {match.score || '—'}
@@ -414,7 +415,7 @@ export default function HeadToHeadPage() {
                   </View>
                 ) : (
                   <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 24 }}>
-                    <Feather name="crosshairs" size={48} color="#d9d9d9" style={{ marginBottom: 16 }} />
+                    <Feather name="crosshair" size={48} color="#d9d9d9" style={{ marginBottom: 16 }} />
                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#353535', marginBottom: 4 }}>
                       No Matches Found
                     </Text>

@@ -12,17 +12,19 @@ import {
 import { Card, Text } from "react-native-paper";
 import { FontAwesome5 } from "@expo/vector-icons";
 
+type TournamentInfo = {
+  _id?: string;
+  name?: string;
+  format?: string;
+  category?: string;
+  matchType?: string;
+  status?: string;
+  startDate?: string;
+  city?: string;
+};
+
 type TournamentEntry = {
-  tournament?: {
-    _id?: string;
-    name?: string;
-    format?: string;
-    category?: string;
-    matchType?: string;
-    status?: string;
-    startDate?: string;
-    city?: string;
-  };
+  tournament?: TournamentInfo;
   stats?: {
     matchesPlayed?: number;
     wins?: number;
@@ -30,6 +32,10 @@ type TournamentEntry = {
     position?: number | string | null;
   };
 };
+
+function getTournamentInfo(entry: TournamentEntry): TournamentInfo {
+  return entry.tournament ?? {};
+}
 
 function formatLabel(value?: string) {
   if (!value) return null;
@@ -170,7 +176,7 @@ export default function ProfileTournamentsScreen() {
             </View>
           ) : (
             tournaments.map((entry, idx) => {
-              const tObj = entry?.tournament ?? entry;
+              const tObj = getTournamentInfo(entry);
               const entryStats = entry?.stats;
               const tournamentId = String(tObj?._id ?? idx);
               const placement = formatPosition(entryStats?.position);

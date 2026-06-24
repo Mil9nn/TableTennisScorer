@@ -8,7 +8,7 @@ import {
 import { BorderRadius } from "@/constants/theme";
 
 interface SkeletonProps {
-  width?: number | string;
+  width?: number | `${number}%` | "auto" | string;
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;
@@ -62,7 +62,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       style={[
         styles.skeleton,
         {
-          width,
+          width: width as ViewStyle["width"],
           height,
           borderRadius,
           opacity,

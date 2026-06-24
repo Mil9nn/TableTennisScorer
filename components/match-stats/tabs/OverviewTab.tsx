@@ -29,7 +29,14 @@ export function OverviewTab({ data }: OverviewTabProps) {
         scoringIds={data.scoringIds}
         side1Label={data.side1Name}
         side2Label={data.side2Name}
-        winnerSide={data.winnerSide}
+        winnerSide={
+          data.winnerSide === "side1" ||
+          data.winnerSide === "side2" ||
+          data.winnerSide === "team1" ||
+          data.winnerSide === "team2"
+            ? data.winnerSide
+            : undefined
+        }
         emphasizeGameWinners
         sequentialGameNumbers={sequentialGameNumbers}
       />

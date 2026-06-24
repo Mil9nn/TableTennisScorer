@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, Text, StyleSheet, ViewStyle, TextInputProps } from 'react-native';
+import { View, TextInput, Text, StyleSheet, ViewStyle, TextInputProps, TextStyle, StyleProp } from 'react-native';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 interface InputProps extends TextInputProps {
@@ -8,7 +8,7 @@ interface InputProps extends TextInputProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   containerStyle?: ViewStyle;
-  inputStyle?: ViewStyle;
+  inputStyle?: StyleProp<TextStyle>;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -27,7 +27,13 @@ export const Input: React.FC<InputProps> = ({
       <View style={[styles.inputContainer, error && styles.inputError]}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon && styles.inputWithLeftIcon, rightIcon && styles.inputWithRightIcon, inputStyle, style]}
+          style={[
+            styles.input,
+            leftIcon ? styles.inputWithLeftIcon : undefined,
+            rightIcon ? styles.inputWithRightIcon : undefined,
+            inputStyle,
+            style,
+          ]}
           placeholderTextColor={Colors.light.textTertiary}
           {...props}
         />

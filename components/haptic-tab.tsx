@@ -1,15 +1,12 @@
-import { Pressable, Platform, PressableProps, ViewStyle, TextStyle } from 'react-native';
+import { Pressable, Platform, PressableProps, StyleProp, ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 
-interface HapticTabProps {
-  onPress?: (e: any) => void;
-  onPressIn?: (e: any) => void;
-  style?: ViewStyle | TextStyle | (ViewStyle | TextStyle)[];
+interface HapticTabProps extends Omit<PressableProps, "style" | "onPress" | "onPressIn" | "children"> {
+  onPress?: PressableProps["onPress"];
+  onPressIn?: PressableProps["onPressIn"];
+  style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
-  accessibilityRole?: string;
-  accessibilityState?: any;
-  testID?: string;
 }
 
 export function HapticTab(props: HapticTabProps) {

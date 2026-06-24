@@ -94,6 +94,8 @@ export interface IndividualMatch {
   finalScore: {
     setsByTeam?: number[];
     setsById?: Record<string, number>;
+    side1Sets?: number;
+    side2Sets?: number;
   };
   winnerTeamIndex?: number | null;
   winnerId?: string | null;

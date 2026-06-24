@@ -10,6 +10,7 @@ import {
   MatchCompletedEvent,
 } from "@/types/socket.type";
 import { gamePointsByTeamIndex, getScoringIds } from "@/lib/match/singlesClient";
+import { isIndividualMatch } from "@/types/match.type";
 
 function shotAlreadyInGame(existing: any[], incoming: any): boolean {
   const inId = incoming?._id != null ? String(incoming._id) : "";
@@ -119,7 +120,7 @@ export function useMatchSocket(options: UseMatchSocketOptions): UseMatchSocketRe
       // Update match state based on score update
       const updatedMatch: any = { ...latest };
 
-      if (matchCategory === "individual" && "games" in updatedMatch) {
+      if (matchCategory === "individual" && isIndividualMatch(latest)) {
         const payload = data as ScoreUpdateEvent & {
           scoresById?: Record<string, number>;
           scoresByTeam?: number[];

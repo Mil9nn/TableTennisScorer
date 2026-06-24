@@ -5,6 +5,7 @@ import { Colors, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
+  className?: string;
   variant?: 'default' | 'elevated' | 'outlined';
   padding?: keyof typeof Spacing;
 }

@@ -31,7 +31,12 @@ interface ShotFeedProps {
 
   participants: Participant[];
 
-  finalScore?: { side1Sets: number; side2Sets: number };
+  finalScore?: {
+    side1Sets?: number;
+    side2Sets?: number;
+    setsByTeam?: number[];
+    setsById?: Record<string, number>;
+  };
 
   serverConfig?: InitialServerConfig | null;
 
@@ -157,7 +162,18 @@ export default function ShotFeed({
 
   const latestParticipants = participants;
 
-  const latestFinalScore = finalScore;
+  const latestFinalScore = finalScore
+    ? {
+        side1Sets:
+          finalScore.side1Sets ??
+          finalScore.setsByTeam?.[0] ??
+          0,
+        side2Sets:
+          finalScore.side2Sets ??
+          finalScore.setsByTeam?.[1] ??
+          0,
+      }
+    : undefined;
 
   const latestServerConfig = serverConfig;
 

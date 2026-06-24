@@ -69,7 +69,7 @@ export interface MatchStatsData {
     playerName: string;
     data: { name: string; value: number }[];
   }[];
-  gameProgressionData: Record<string, string | number>[];
+  gameProgressionData: Array<{ game: string; [key: string]: string | number }>;
   subMatchDetails?: TeamSubMatchDetail[];
   category: "individual" | "team";
 }
@@ -373,7 +373,22 @@ function buildTeamStats(match: TeamMatch, matchId: string): MatchStatsData {
     shots,
     analytics,
     insights,
-    achievements: detectAchievements(games, match),
+    achievements: detectAchievements(games, {
+      _id: match._id,
+      matchCategory: "individual",
+      matchType: "singles",
+      numberOfSets: 0,
+      participants,
+      status: match.status,
+      currentGame: 1,
+      games,
+      finalScore: {
+        setsByTeam: [
+          match.finalScore?.team1Matches ?? 0,
+          match.finalScore?.team2Matches ?? 0,
+        ],
+      },
+    } as IndividualMatch),
     serveData: buildServeData(participants, serveStats),
     strokeData: Object.entries(shotTypes).map(([type, value]) => ({
       name: formatStrokeName(type),

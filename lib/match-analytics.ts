@@ -143,7 +143,7 @@ export function computeMatchAnalytics(
     let currentTurnServerWon = 0;
 
     for (let shotIndex = 0; shotIndex < shots.length; shotIndex += 1) {
-      const shot = shots[shotIndex] as Record<string, unknown>;
+      const shot = shots[shotIndex] as unknown as Record<string, unknown>;
       const winnerSide = resolvePointWinnerSide(shot, sideFromId);
       if (!winnerSide) continue;
       const playerId = normalizeId(shot?.player);
@@ -164,8 +164,12 @@ export function computeMatchAnalytics(
       else gameSide2 += 1;
 
       const serverId = normalizeId(shot?.server);
+      const serverRecord =
+        shot?.server != null && typeof shot.server === "object"
+          ? (shot.server as Record<string, unknown>)
+          : null;
       const serverSide =
-        normalizeSide(shot?.server?.side) ||
+        normalizeSide(serverRecord?.side) ||
         normalizeSide(shot?.serverSide) ||
         normalizeSide(serverId) ||
         sideFromId(serverId);

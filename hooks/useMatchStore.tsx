@@ -389,7 +389,7 @@ export const useMatchStore = create<MatchStore>((set, get) => {
         : null,
       serverConfig: raw.serverConfig ?? null,
       tournament: raw.tournament ?? null,
-    };
+    } as IndividualMatch;
   };
 
   return {

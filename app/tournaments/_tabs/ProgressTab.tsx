@@ -1,5 +1,5 @@
 import React from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { DesignTokens } from "@/constants/designTokens";
 import { HybridTournamentManager } from "@/components/tournaments/HybridTournamentManager";
@@ -114,7 +114,7 @@ export const ProgressTab: React.FC<ProgressTabProps> = ({
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   progressContainer: {
     padding: tokens.spacing[4],
   },
@@ -123,8 +123,8 @@ const styles = {
     padding: tokens.spacing[16],
   },
   progressHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.spacing[8],
     marginBottom: tokens.spacing[10],
   },
@@ -134,15 +134,15 @@ const styles = {
     color: tokens.colors.text.primary,
   },
   progressStats: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: tokens.spacing[10],
   },
   progressStat: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   progressStatNumber: {
-    fontSize: tokens.typography.fontSize['2xl'],
+    fontSize: tokens.typography.fontSize["2xl"],
     fontWeight: tokens.typography.fontWeight.bold,
     color: tokens.colors.primary[600],
     marginBottom: tokens.spacing[4],
@@ -150,7 +150,7 @@ const styles = {
   progressStatLabel: {
     fontSize: tokens.typography.fontSize.xs,
     color: tokens.colors.text.secondary,
-    textTransform: 'uppercase' as const,
+    textTransform: "uppercase",
     letterSpacing: tokens.typography.letterSpacing.wide,
   },
   progressStatDivider: {
@@ -161,11 +161,11 @@ const styles = {
     height: tokens.spacing[8],
     backgroundColor: tokens.colors.gray[200],
     borderRadius: tokens.borderRadius.full,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: tokens.spacing[16],
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: tokens.colors.primary[600],
     borderRadius: tokens.borderRadius.full,
   },
@@ -173,8 +173,8 @@ const styles = {
     gap: tokens.spacing[8],
   },
   statusItem: {
-    flexDirection: 'row' as const,
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: tokens.spacing[8],
   },
   statusDot: {
@@ -189,7 +189,7 @@ const styles = {
   draftStateCard: {
     backgroundColor: tokens.colors.white,
     padding: tokens.spacing[16],
-    alignItems: 'center',
+    alignItems: "center",
   },
   draftStateTitle: {
     fontSize: tokens.typography.fontSize.lg,
@@ -201,6 +201,6 @@ const styles = {
   draftStateSubtitle: {
     fontSize: tokens.typography.fontSize.sm,
     color: tokens.colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
-};
+});

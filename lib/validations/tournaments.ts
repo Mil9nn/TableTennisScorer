@@ -12,12 +12,12 @@ const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid ID format"
 
 // Tournament formats
 export const tournamentFormatSchema = z.enum(["round_robin", "knockout", "hybrid"], {
-  errorMap: () => ({ message: "Format must be 'round_robin', 'knockout', or 'hybrid'" }),
+  message: "Format must be 'round_robin', 'knockout', or 'hybrid'",
 });
 
 // Tournament categories
 export const tournamentCategorySchema = z.enum(["individual", "team"], {
-  errorMap: () => ({ message: "Category must be 'individual' or 'team'" }),
+  message: "Category must be 'individual' or 'team'",
 });
 
 // Re-export matchTypeSchema for convenience
@@ -25,12 +25,12 @@ export { matchTypeSchema };
 
 // Seeding methods
 export const seedingMethodSchema = z.enum(["none", "manual", "ranking", "random"], {
-  errorMap: () => ({ message: "Seeding method must be 'none', 'manual', 'ranking', or 'random'" }),
+  message: "Seeding method must be 'none', 'manual', 'ranking', or 'random'",
 });
 
 // Deuce settings
 export const deuceSettingSchema = z.enum(["standard", "no_advantage"], {
-  errorMap: () => ({ message: "Deuce setting must be 'standard' or 'no_advantage'" }),
+  message: "Deuce setting must be 'standard' or 'no_advantage'",
 });
 
 // Tournament rules schema

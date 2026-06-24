@@ -347,7 +347,6 @@ export default function SwaythlingScorer({ match }: SwaythlingScorerProps) {
                 </Text>
                 <MatchStatusBadge
                   status={currentSubMatch.status as MatchStatus}
-                  size="sm"
                 />
               </View>
               <Text style={styles.subMatchPlayers}>

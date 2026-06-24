@@ -93,6 +93,14 @@ const styles = StyleSheet.create({
   pressablePressed: {
     opacity: 0.92,
   },
+  pressableSelected: {
+    backgroundColor: tokens.components.chip.default.backgroundColor,
+    borderWidth: 1,
+    borderColor: tokens.colors.info,
+  },
+  pressableSelectedLive: {
+    backgroundColor: tokens.colors.error,
+  },
   label: {
     fontSize: DesignTokens.typography.fontSize.base,
     fontWeight: DesignTokens.typography.fontWeight.semibold,

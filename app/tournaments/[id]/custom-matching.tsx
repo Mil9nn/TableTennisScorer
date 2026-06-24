@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     borderRadius: tokens.borderRadius.sm,
   },
   backButton: {
-    color: tokens.colors.text.primary,
+    marginTop: tokens.spacing[4],
   },
   headerContent: {
     flex: 1,

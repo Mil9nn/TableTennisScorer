@@ -1481,7 +1481,7 @@ export default function TournamentDetailPage() {
                           isTeamTournament={isTeamTournament}
                           onParticipantPress={(p) => {
                             if (isTeamTournament) {
-                              router.push(`/teams/${p._id}`);
+                              router.push(`/teams/${p._id}` as any);
                             } else {
                               const targetUserId = resolveParticipantUserId(p);
                               if (!targetUserId) {
@@ -1512,7 +1512,9 @@ export default function TournamentDetailPage() {
                           tournament={tournament}
                           fadeAnim={fadeAnim}
                           knockoutMatches={knockoutMatches}
-                          buildTournamentMatchRoute={buildTournamentMatchRoute}
+                          onMatchClick={(matchId) => {
+                            router.push(buildTournamentMatchRoute(matchId) as any);
+                          }}
                         />
                       </ScrollView>
                     ) : null;

@@ -82,7 +82,7 @@ export default function TeamMatchesList({
       <View style={index < data.length - 1 ? styles.cardMargin : undefined}>
         <Pressable
           onPress={() => {
-            const matchId = normalizeMatchIdParam(match?._id ?? match?.id);
+            const matchId = normalizeMatchIdParam(match?._id ?? (match as { id?: string }).id);
             if (!matchId) return;
             onMatchPress(matchId);
           }}

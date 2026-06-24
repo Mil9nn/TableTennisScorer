@@ -34,21 +34,20 @@ interface LiveMatchDetailsProps {
 
 export default function LiveMatchDetails({ matchId, category }: LiveMatchDetailsProps) {
   const { match, fetchingMatch, fetchMatch } = useMatchStore();
-  const socket = useMatchSocket(matchId, category);
   const insets = useSafeAreaInsets();
+  const matchCategory = category ?? "individual";
 
   useEffect(() => {
     if (matchId) {
-      fetchMatch(matchId, category);
+      fetchMatch(matchId, matchCategory);
     }
-  }, [matchId, fetchMatch, category]);
+  }, [matchId, fetchMatch, matchCategory]);
 
-  // Socket integration for real-time updates - DISABLED
   const { isConnected, isJoined } = useMatchSocket({
     matchId,
-    matchCategory: category,
+    matchCategory,
     role: "viewer",
-    enabled: false, // Socket.IO disabled - enable when needed
+    enabled: false,
   });
 
   // Loading state

@@ -2,8 +2,6 @@
  * Backend-only team match types (mongoose, Shot, populated shapes).
  */
 
-import { Types } from "mongoose";
-import { Shot } from "@/types/shot.type";
 import type {
   TeamMatchFormat,
   TeamMatchSnapshot,
@@ -15,7 +13,7 @@ import type {
 } from "./teamMatchTypes.core";
 
 export interface TeamSubMatch extends TeamSubMatchBase {
-  _id?: Types.ObjectId | string;
+  _id?: string;
 }
 
 export interface TeamSubMatchPopulated extends Omit<TeamSubMatch, "playerTeam1" | "playerTeam2"> {

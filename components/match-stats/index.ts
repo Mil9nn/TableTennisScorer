@@ -9,5 +9,4 @@ export { SectionNavigation } from './SectionNavigation';
 export { StatsSectionContainer } from './StatsSectionContainer';
 export { MatchSummary } from './MatchSummary';
 export { InsightCard } from './InsightCard';
-export { MatchTimeline } from './MatchTimeline';
 

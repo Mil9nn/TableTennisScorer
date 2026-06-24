@@ -23,7 +23,7 @@ function PlayerAvatar({
   size?: number;
 }) {
   const fallbackInitial = name?.charAt(0).toUpperCase() || "?";
-  const fallbackStyle = getAvatarFallbackStyle(playerId);
+  const fallbackStyle = getAvatarFallbackStyle(playerId ?? "");
 
   return profileImage ? (
     <Image

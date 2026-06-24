@@ -323,7 +323,12 @@ export function EnhancedStandingsTable({
   const resolvedRows = useMemo(() => {
     const byId = new Map<string, StandingRow>();
     safeStandings.forEach((row, index) => {
-      const id = String(row?.participant?._id || `idx-${index}`);
+      const id =
+        typeof row?.participant === "object" && row.participant?._id
+          ? String(row.participant._id)
+          : typeof row?.participant === "string"
+            ? row.participant
+            : `idx-${index}`;
       const existing = byId.get(id);
       if (!existing) {
         byId.set(id, row);
@@ -384,35 +389,35 @@ export function EnhancedStandingsTable({
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <DataTable>
             <DataTable.Header style={styles.tableHeader}>
-              <DataTable.Title style={[styles.headTitle, styles.rankCol]}>Rank</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.nameCol]}>{nameColumnLabel}</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>MP</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>W</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>L</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>D</DataTable.Title>
+              <DataTable.Title style={styles.rankCol}><Text style={styles.headTitle}>Rank</Text></DataTable.Title>
+              <DataTable.Title style={styles.nameCol}><Text style={styles.headTitle}>{nameColumnLabel}</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>MP</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>W</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>L</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>D</Text></DataTable.Title>
               {isTeamTournament ? (
                 <>
-                  <DataTable.Title style={[styles.headTitle, styles.statCol]}>SM.W</DataTable.Title>
-                  <DataTable.Title style={[styles.headTitle, styles.statCol]}>SM.L</DataTable.Title>
+                  <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>SM.W</Text></DataTable.Title>
+                  <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>SM.L</Text></DataTable.Title>
                 </>
               ) : (
                 <>
-                  <DataTable.Title style={[styles.headTitle, styles.statCol]}>SW</DataTable.Title>
-                  <DataTable.Title style={[styles.headTitle, styles.statCol]}>SL</DataTable.Title>
+                  <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>SW</Text></DataTable.Title>
+                  <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>SL</Text></DataTable.Title>
                   {showDetailedStats && (
                     <>
-                      <DataTable.Title style={[styles.headTitle, styles.statCol]}>SD</DataTable.Title>
-                      <DataTable.Title style={[styles.headTitle, styles.statCol]}>PS</DataTable.Title>
-                      <DataTable.Title style={[styles.headTitle, styles.statCol]}>PD</DataTable.Title>
+                      <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>SD</Text></DataTable.Title>
+                      <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>PS</Text></DataTable.Title>
+                      <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>PD</Text></DataTable.Title>
                     </>
                   )}
                 </>
               )}
-              <DataTable.Title style={[styles.headTitle, styles.statColPts]}>Pts</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>Win%</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.statCol]}>Streak</DataTable.Title>
-              <DataTable.Title style={[styles.headTitle, styles.formCol]}>Form</DataTable.Title>
-              {isTeamTournament && <DataTable.Title style={[styles.headTitle, styles.actionCol]}> </DataTable.Title>}
+              <DataTable.Title style={styles.statColPts}><Text style={styles.headTitle}>Pts</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>Win%</Text></DataTable.Title>
+              <DataTable.Title style={styles.statCol}><Text style={styles.headTitle}>Streak</Text></DataTable.Title>
+              <DataTable.Title style={styles.formCol}><Text style={styles.headTitle}>Form</Text></DataTable.Title>
+              {isTeamTournament && <DataTable.Title style={styles.actionCol}><Text style={styles.headTitle}> </Text></DataTable.Title>}
             </DataTable.Header>
 
             {resolvedRows.map((row, index) => {

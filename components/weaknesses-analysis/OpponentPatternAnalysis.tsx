@@ -73,7 +73,7 @@ export function OpponentPatternAnalysis({
     <Card>
       <View className="p-4 border-b border-gray-200">
         <View className="flex-row items-center gap-2">
-          <Ionicons name="alert-triangle" size={20} color="#f97316" />
+          <Ionicons name="warning" size={20} color="#f97316" />
           <Text className="text-lg font-semibold text-gray-900">
             What Opponents Use Against You
           </Text>

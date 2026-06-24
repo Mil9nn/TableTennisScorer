@@ -53,9 +53,7 @@ const teamCustomSubMatchSchema = z.object({
 
 const teamConfigSchema = z.object({
   matchFormat: z.enum(["five_singles", "single_double_single", "custom"], {
-    errorMap: () => ({
-      message: "Select a match structure (5 singles, S-D-S, or custom)",
-    }),
+    message: "Select a match structure (5 singles, S-D-S, or custom)",
   }),
   setsPerSubMatch: z.string().min(1, "Select best-of for sub-matches"),
   customSubMatches: z.array(teamCustomSubMatchSchema).optional(),

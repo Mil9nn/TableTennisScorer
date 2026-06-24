@@ -149,7 +149,7 @@ export const useIndividualMatch = create<IndividualMatchState>((set, get) => {
 
       rightPoints: p2,
 
-      currentServer: (match.currentServerPlayerId || match.currentServer) ?? null,
+      currentServer: ((match.currentServerPlayerId || match.currentServer) ?? null) as ServerKey | null,
 
       currentGame: currentGameNum,
 

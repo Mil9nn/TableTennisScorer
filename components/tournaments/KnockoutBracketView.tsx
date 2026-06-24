@@ -647,10 +647,10 @@ export default function KnockoutBracketView({
         >
           <Card 
             variant={isLive ? "elevated" : "default"}
-            style={[
+            style={StyleSheet.flatten([
               modernStyles.matchCard,
-              isLive && modernStyles.liveMatchCard
-            ]}
+              isLive ? modernStyles.liveMatchCard : undefined,
+            ])}
           >
             {children}
           </Card>
@@ -1056,6 +1056,9 @@ const modernStyles = StyleSheet.create({
   scrollView: {
     backgroundColor: tokens.colors.background.primary,
   },
+  scrollContent: {
+    paddingBottom: tokens.spacing[6],
+  },
   
   // Bracket container
   bracketContainer: {
@@ -1214,6 +1217,12 @@ const modernStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: tokens.spacing[2],
   },
+  vsBadge: {
+    paddingHorizontal: tokens.spacing[3],
+    paddingVertical: tokens.spacing[1],
+    borderRadius: tokens.borderRadius.full,
+    backgroundColor: tokens.colors.gray[100],
+  },
   vsText: {
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.normal,
@@ -1225,6 +1234,19 @@ const modernStyles = StyleSheet.create({
     color: tokens.colors.text.primary,
     minWidth: 26,
     textAlign: 'center',
+  },
+  scoreDisplay: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  winnerScoreDisplay: {
+    backgroundColor: tokens.colors.success + '15',
+    borderRadius: tokens.borderRadius.sm,
+    paddingHorizontal: tokens.spacing[2],
+    paddingVertical: tokens.spacing[1],
+  },
+  winnerScoreText: {
+    color: tokens.colors.success,
   },
   
   // Status section - following schedule pattern

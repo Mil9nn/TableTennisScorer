@@ -104,7 +104,7 @@ export function WagonWheelSection({
                   <Text className="font-semibold text-gray-900">
                     {player.fullName || player.username}
                   </Text>
-                  <Badge variant="secondary" size="sm">
+                  <Badge variant="default" size="sm">
                     {playerGames.reduce((s, g) => s + g.shots.length, 0)} points
                   </Badge>
                 </View>
@@ -120,7 +120,7 @@ export function WagonWheelSection({
                           <Text className="text-sm font-semibold text-white">
                             Game {game.gameNumber}
                           </Text>
-                          <Badge variant="outline" size="sm">
+                          <Badge variant="default" size="sm">
                             {game.shots.length} points
                           </Badge>
                         </View>

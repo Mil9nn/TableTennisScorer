@@ -9,7 +9,7 @@ export default function NavigationGuard() {
   const segments = useSegments();
 
   useEffect(() => {
-    if (authLoading || segments.length === 0) return;
+    if (authLoading || !segments[0]) return;
 
     const inAuthGroup = segments[0] === "auth";
     const onJoinTournament =

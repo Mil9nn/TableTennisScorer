@@ -93,7 +93,7 @@ export function formatStrokeName(stroke: string): string {
     .join(" ");
 }
 
-export function formatDateShort(dateString?: string | Date): string {
+export function formatDateShort(dateString?: string | Date | number): string {
   if (dateString == null || dateString === "") return "";
   try {
     const d =

@@ -42,6 +42,8 @@ async function main() {
   const ip = await getLanIp();
   process.env.REACT_NATIVE_PACKAGER_HOSTNAME = ip;
   console.log(`Using LAN IP: ${ip}`);
+  console.log(`Connect in Expo Go: exp://${ip}:8081`);
+  console.log("Run this in your own terminal (not a background task) to see the QR code.\n");
 
   const args = ["expo", "start", "--lan", ...process.argv.slice(2)];
   const child = spawn("npx", args, {

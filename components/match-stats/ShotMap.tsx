@@ -18,7 +18,7 @@ import { Shot } from "@/types/shot.type";
 import { getShotColor } from "@/lib/match-stats-utils";
 import { formatStrokeName } from "@/lib/utils";
 import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
-import Card from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 
 interface ShotMapProps {
   shots: Shot[];
@@ -78,7 +78,7 @@ export default function ShotMap({
   const TABLE_HEIGHT = 101.67;
 
   // Calculate responsive SVG dimensions
-  const maxSvgWidth = screenWidth - Spacing.large * 2;
+  const maxSvgWidth = screenWidth - Spacing.lg * 2;
   const svgHeight = (maxSvgWidth / SVG_WIDTH) * SVG_HEIGHT;
 
   const handleShotPress = (shot: Shot, index: number) => {
@@ -241,7 +241,7 @@ export default function ShotMap({
                   {isHovered && (
                     <SvgText
                       x={shot.landingX}
-                      y={shot.landingY - 12}
+                      y={(shot.landingY ?? 0) - 12}
                       fill="#FFFFFF"
                       fontSize="10"
                       fontWeight="bold"
@@ -280,9 +280,9 @@ export default function ShotMap({
                 Stroke: {formatStrokeName(tooltipData.shot.stroke)}
               </Text>
             )}
-            {tooltipData.shot.player?.name && (
+            {(tooltipData.shot.player?.fullName || tooltipData.shot.player?.username) && (
               <Text style={styles.tooltipText}>
-                Player: {tooltipData.shot.player.name}
+                Player: {tooltipData.shot.player.fullName || tooltipData.shot.player.username}
               </Text>
             )}
             <TouchableOpacity

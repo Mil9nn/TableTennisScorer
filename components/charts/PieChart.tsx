@@ -103,7 +103,7 @@ export const PieChart: React.FC<PieChartProps> = ({
         </Group>
       ))}
 
-      {centerLabel && innerRadius > 0 && font && (
+      {centerLabel && innerRadius > 0 && font && typeof centerLabel === "string" && (
         <Group>
           <Text
             x={centerX - 20}

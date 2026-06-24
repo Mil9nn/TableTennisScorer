@@ -52,10 +52,11 @@ export function Accordion({
     <View className={cn("", className)}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child) && child.type === AccordionItem) {
-          return React.cloneElement(child as any, {
-            isOpen: openItems.includes(child.props.value),
+          const item = child as React.ReactElement<{ value: string }>;
+          return React.cloneElement(item, {
+            isOpen: openItems.includes(item.props.value),
             onToggle: handleToggle,
-          });
+          } as Partial<{ value: string; isOpen?: boolean; onToggle?: (value: string) => void }>);
         }
         return child;
       })}

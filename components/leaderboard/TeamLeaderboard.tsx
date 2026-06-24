@@ -65,13 +65,12 @@ const TeamRow = ({
             src={entry.team.logo}
             alt={entry.team.name}
             size={48}
-            style={
+            className={
               isTopThree
-                ? {
-                    borderWidth: isRank1 ? 2.5 : 1.5,
-                    borderColor: isRank1 ? "#4f46e5" : "#d9d9d9",
-                  }
-                : {}
+                ? isRank1
+                  ? "border-[2.5px] border-indigo-600"
+                  : "border-[1.5px] border-gray-300"
+                : undefined
             }
           />
         </TouchableOpacity>
@@ -229,8 +228,7 @@ export function TeamLeaderboard({
           <View
             className="h-px mx-4"
             style={{
-              background:
-                "linear-gradient(to right, transparent, rgba(99, 102, 241, 0.2), transparent)",
+              backgroundColor: "rgba(99, 102, 241, 0.2)",
             }}
           />
         </>

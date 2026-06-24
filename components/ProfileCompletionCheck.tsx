@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const ProfileCompletionCheck = () => {
   const { user } = useAuthStore();
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousSegmentsRef = useRef<string[]>([]);
   
   // Always call hooks - can't be conditional  
@@ -18,7 +18,7 @@ const ProfileCompletionCheck = () => {
     }
 
     // Only proceed if we have valid segments (navigation context available)
-    if (!segments || segments.length === 0) {
+    if (!segments || !segments[0]) {
       return;
     }
 

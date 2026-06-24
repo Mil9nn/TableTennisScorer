@@ -8,17 +8,17 @@ import { z } from "zod";
 
 // Gender options
 export const genderSchema = z.enum(["male", "female", "other"], {
-  errorMap: () => ({ message: "Gender must be 'male', 'female', or 'other'" }),
+  message: "Gender must be 'male', 'female', or 'other'",
 });
 
 // Playing hand
 export const playingHandSchema = z.enum(["right", "left"], {
-  errorMap: () => ({ message: "Playing hand must be 'right' or 'left'" }),
+  message: "Playing hand must be 'right' or 'left'",
 });
 
 // Grip style
 export const gripStyleSchema = z.enum(["shakehand", "penhold"], {
-  errorMap: () => ({ message: "Grip style must be 'shakehand' or 'penhold'" }),
+  message: "Grip style must be 'shakehand' or 'penhold'",
 });
 
 // Complete profile schema (used after registration)

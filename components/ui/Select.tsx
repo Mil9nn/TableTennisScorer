@@ -18,7 +18,8 @@ interface SelectOption {
 interface SelectProps {
   value?: string;
   onValueChange: (value: string) => void;
-  options: SelectOption[];
+  options?: SelectOption[];
+  items?: SelectOption[];
   placeholder?: string;
   className?: string;
 }
@@ -27,12 +28,14 @@ export function Select({
   value,
   onValueChange,
   options,
+  items,
   placeholder = "Select...",
   className,
 }: SelectProps) {
   const [modalVisible, setModalVisible] = useState(false);
+  const resolvedOptions = items ?? options ?? [];
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedOption = resolvedOptions.find((opt) => opt.value === value);
 
   return (
     <>
@@ -73,7 +76,7 @@ export function Select({
               </TouchableOpacity>
             </View>
             <ScrollView>
-              {options.map((option) => (
+              {resolvedOptions.map((option) => (
                 <TouchableOpacity
                   key={option.value}
                   className={cn(

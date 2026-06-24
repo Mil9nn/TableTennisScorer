@@ -14,6 +14,8 @@ interface RadioGroupItemProps {
   value: string;
   label: string;
   className?: string;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
 export function RadioGroup({
@@ -43,7 +45,7 @@ export function RadioGroupItem({
   selected = false,
   onSelect,
   className,
-}: RadioGroupItemProps & { selected?: boolean; onSelect?: () => void }) {
+}: RadioGroupItemProps) {
   return (
     <TouchableOpacity
       onPress={onSelect}

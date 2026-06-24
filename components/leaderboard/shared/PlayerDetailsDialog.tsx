@@ -2,7 +2,30 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, Modal, TouchableOpacity } from 'react-native';
 import { DesignTokens } from '@/constants/designTokens';
 
-export const PlayerDetailsDialog = ({ visible, onClose, data }) => {
+interface PlayerDetailsDialogProps {
+  visible: boolean;
+  onClose: () => void;
+  data: {
+    profileImage?: string;
+    fullName?: string;
+    username?: string;
+    winRate?: string | number;
+    streak?: string | number;
+    wins?: string | number;
+    losses?: string | number;
+    totalMatches?: string | number;
+    setsWon?: string | number;
+    setsLost?: string | number;
+    pointsScored?: string | number;
+    pointsConceded?: string | number;
+    bestStreak?: string | number;
+    totalServes?: string | number;
+    servesWon?: string | number;
+    servesLost?: string | number;
+  } | null;
+}
+
+export const PlayerDetailsDialog = ({ visible, onClose, data }: PlayerDetailsDialogProps) => {
   if (!data) return null;
 
   return (

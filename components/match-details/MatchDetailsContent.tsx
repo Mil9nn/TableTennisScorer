@@ -447,8 +447,8 @@ export default function MatchDetailsContent({ match }: { match: Match }) {
                 value={
                   typeof match.scorer === 'object' 
                     ? match.scorer.fullName || match.scorer.username
-                    : match.tournament.scorers.find((s: any) => s._id === match.scorer)?.fullName || 
-                      match.tournament.scorers.find((s: any) => s._id === match.scorer)?.username || 
+                    : (match.tournament as { scorers?: Array<{ _id: string; fullName?: string; username?: string }> })?.scorers?.find((s) => s._id === match.scorer)?.fullName || 
+                      (match.tournament as { scorers?: Array<{ _id: string; fullName?: string; username?: string }> })?.scorers?.find((s) => s._id === match.scorer)?.username || 
                       'Unknown'
                 } 
                 highlighted={true}

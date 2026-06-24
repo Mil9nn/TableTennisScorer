@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Ionicons } from "@expo/vector-icons";
 import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
-import UserSearchInput from "./match/components/UserSearchInput";
+import UserSearchInput from "@/app/match/components/UserSearchInput";
 
 // Schema
 const teamSchema = z.object({
