@@ -2,7 +2,6 @@ import { UpdateProfileDialog } from "@/components/profile/UpdateProfileDialog";
 import { TournamentTabView, type TabRoute } from "@/components/ui/TournamentTabView";
 import { DesignTokens } from "@/constants/designTokens";
 import { useProfile, type ProfileDisplayUser } from "@/contexts/ProfileContext";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import {
   fetchInsights,
   fetchProfileMatchHistory,
@@ -13,10 +12,9 @@ import { profilePath } from "@/lib/profile/navigation";
 import { hasInsightsData, hasShotsData } from "@/lib/profile/sectionAvailability";
 import { FontAwesome } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter, type Href } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -24,7 +22,6 @@ import {
   View,
 } from "react-native";
 import { Card, List, Text } from "react-native-paper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PROFILE_TAB_ROUTES: TabRoute[] = [
   { key: "information", title: "Information" },
@@ -58,14 +55,7 @@ const formatDateLong = (dateString: string) => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: DesignTokens.colors.background.secondary,
-  },
-  topSection: {
-    gap: DesignTokens.spacing[2],
-  },
-  tabViewWrapper: {
-    flex: 1,
-    backgroundColor: DesignTokens.colors.background.tertiary,
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   scene: {
     flex: 1,
@@ -75,11 +65,11 @@ const styles = StyleSheet.create({
   },
   sceneContent: {
     gap: DesignTokens.spacing[2],
-    paddingBottom: DesignTokens.spacing[6],
+    paddingBottom: DesignTokens.spacing[8],
   },
-  loadingText: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.tertiary,
+  statusBanner: {
+    paddingHorizontal: DesignTokens.spacing[6],
+    paddingVertical: DesignTokens.spacing[3],
   },
   errorText: {
     fontSize: DesignTokens.typography.fontSize.base,
@@ -100,36 +90,17 @@ const styles = StyleSheet.create({
   listItemDescription: {
     fontSize: DesignTokens.typography.fontSize.sm,
   },
-  accountCard: {
-    borderRadius: DesignTokens.borderRadius.none,
-    backgroundColor: DesignTokens.colors.background.primary,
-  },
   accountButton: {
-    paddingVertical: DesignTokens.spacing[5],
+    paddingVertical: DesignTokens.spacing[4],
     paddingHorizontal: DesignTokens.spacing[4],
     borderRadius: DesignTokens.borderRadius.sm,
     alignItems: "center",
     justifyContent: "center",
   },
-  bottomActions: {
-    paddingHorizontal: DesignTokens.spacing[6],
-  },
   updateButton: {
     backgroundColor: DesignTokens.colors.primary[600],
-  },
-  logoutButton: {
-    backgroundColor: "#fee2e2",
-    height: 45,
-  },
-  deleteAccountButton: {
-    backgroundColor: DesignTokens.colors.background.primary,
-    borderWidth: 1,
-    borderColor: "#fecaca",
-    height: 45,
-    marginBottom: DesignTokens.spacing[3],
-  },
-  deleteAccountButtonText: {
-    color: DesignTokens.colors.error,
+    marginHorizontal: DesignTokens.spacing[4],
+    marginTop: DesignTokens.spacing[2],
   },
   accountButtonText: {
     fontSize: DesignTokens.typography.fontSize.sm,
@@ -137,9 +108,6 @@ const styles = StyleSheet.create({
   },
   updateButtonText: {
     color: DesignTokens.colors.text.inverse,
-  },
-  logoutButtonText: {
-    color: DesignTokens.colors.error,
   },
   userInfoCard: {
     backgroundColor: DesignTokens.components.card.backgroundColor,
@@ -156,33 +124,40 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   userInfoGrid: {
-    gap: DesignTokens.spacing[2],
+    gap: 0,
   },
-  userInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
+  userInfoField: {
+    paddingVertical: DesignTokens.spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: DesignTokens.colors.border.light,
+  },
+  userInfoFieldLast: {
+    borderBottomWidth: 0,
   },
   userInfoLabel: {
     fontSize: DesignTokens.typography.fontSize.sm,
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.text.tertiary,
-    marginBottom: DesignTokens.spacing[1],
     textTransform: "uppercase",
     letterSpacing: 0.1,
-  },
-  userInfoValueContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: DesignTokens.spacing[2],
+    marginBottom: DesignTokens.spacing[1],
   },
   userInfoValue: {
     fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.secondary,
+    color: DesignTokens.colors.text.primary,
+  },
+  emptyStateText: {
+    fontSize: DesignTokens.typography.fontSize.base,
+    color: DesignTokens.colors.text.tertiary,
+    lineHeight: DesignTokens.typography.fontSize.base * 1.5,
   },
 });
+
+interface ProfileField {
+  key: string;
+  label: string;
+  value: string;
+}
 
 interface ProfileHomeScreenProps {
   userId: string;
@@ -190,10 +165,7 @@ interface ProfileHomeScreenProps {
 
 export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const logout = useAuthStore((s) => s.logout);
-  const { user, isMe, refreshUser, loading: profileLoading, error: profileError } =
-    useProfile();
+  const { user, isMe, refreshUser, error: profileError } = useProfile();
 
   const resolvedUserId = String(userId ?? "");
 
@@ -201,7 +173,6 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updateDialogVisible, setUpdateDialogVisible] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
   const [showInsights, setShowInsights] = useState(false);
   const [showShots, setShowShots] = useState(false);
@@ -252,27 +223,61 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
     Promise.all([refreshUser(), load()]).finally(() => setRefreshing(false));
   }, [refreshUser, load]);
 
-  const handleLogout = useCallback(() => {
-    Alert.alert("Log out", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          setLoggingOut(true);
-          try {
-            await logout();
-            router.replace("/auth/login");
-          } finally {
-            setLoggingOut(false);
-          }
-        },
-      },
-    ]);
-  }, [logout, router]);
-
   const displayUser = user as ProfileDisplayUser | null;
-  const showLoading = profileLoading || loading;
+  const statusMessage = profileError || error;
+
+  const profileFields = useMemo((): ProfileField[] => {
+    if (!displayUser) return [];
+
+    const fields: ProfileField[] = [];
+
+    if (isMe && displayUser.email) {
+      fields.push({ key: "email", label: "Email", value: displayUser.email });
+    }
+    if (displayUser.dateOfBirth) {
+      const age = calculateAge(displayUser.dateOfBirth);
+      if (age !== null) {
+        fields.push({ key: "age", label: "Age", value: `${age} years old` });
+      }
+    }
+    if (displayUser.gender) {
+      fields.push({
+        key: "gender",
+        label: "Gender",
+        value: formatGender(displayUser.gender),
+      });
+    }
+    if (displayUser.location) {
+      fields.push({
+        key: "location",
+        label: "Location",
+        value: displayUser.location,
+      });
+    }
+    if (displayUser.handedness) {
+      fields.push({
+        key: "handedness",
+        label: "Handedness",
+        value: `${formatHandedness(displayUser.handedness)} handed`,
+      });
+    }
+    if (isMe && displayUser.phoneNumber) {
+      fields.push({
+        key: "phone",
+        label: "Phone",
+        value: displayUser.phoneNumber,
+      });
+    }
+    if (displayUser.createdAt) {
+      fields.push({
+        key: "memberSince",
+        label: "Member Since",
+        value: formatDateLong(displayUser.createdAt),
+      });
+    }
+
+    return fields;
+  }, [displayUser, isMe]);
 
   const handleTabIndexChange = useCallback((index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -283,89 +288,62 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   );
 
+  const renderStatusBanner = () => {
+    if (!statusMessage) return null;
+
+    return (
+      <View style={styles.statusBanner}>
+        <Text style={styles.errorText}>{statusMessage}</Text>
+      </View>
+    );
+  };
+
   const renderInformationTab = () => (
     <ScrollView
       style={styles.sceneScroll}
       contentContainerStyle={styles.sceneContent}
       refreshControl={refreshControl}
     >
+      {renderStatusBanner()}
+
+      {isMe ? (
+        <TouchableOpacity
+          style={[styles.accountButton, styles.updateButton]}
+          onPress={() => setUpdateDialogVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Update profile"
+        >
+          <Text style={[styles.accountButtonText, styles.updateButtonText]}>
+            Update profile
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
       <Card mode="contained" style={styles.userInfoCard}>
         <Card.Content style={{ padding: DesignTokens.spacing[6] }}>
           <Text style={styles.userInfoTitle}>Profile Information</Text>
-          <View style={styles.userInfoGrid}>
-            {isMe && displayUser?.email ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Email</Text>
-                  <Text style={styles.userInfoValue}>{displayUser.email}</Text>
+          {profileFields.length > 0 ? (
+            <View style={styles.userInfoGrid}>
+              {profileFields.map((field, index) => (
+                <View
+                  key={field.key}
+                  style={[
+                    styles.userInfoField,
+                    index === profileFields.length - 1 && styles.userInfoFieldLast,
+                  ]}
+                >
+                  <Text style={styles.userInfoLabel}>{field.label}</Text>
+                  <Text style={styles.userInfoValue}>{field.value}</Text>
                 </View>
-              </View>
-            ) : null}
-
-            {displayUser?.dateOfBirth ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Age</Text>
-                  <Text style={styles.userInfoValue}>
-                    {calculateAge(displayUser.dateOfBirth)} years old
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {displayUser?.gender ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Gender</Text>
-                  <Text style={styles.userInfoValue}>
-                    {formatGender(displayUser.gender)}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {displayUser?.location ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Location</Text>
-                  <Text style={styles.userInfoValue}>{displayUser.location}</Text>
-                </View>
-              </View>
-            ) : null}
-
-            {displayUser?.handedness ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Handedness</Text>
-                  <Text style={styles.userInfoValue}>
-                    {formatHandedness(displayUser.handedness)} handed
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {isMe && displayUser?.phoneNumber ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Phone</Text>
-                  <Text style={styles.userInfoValue}>
-                    {displayUser.phoneNumber}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {displayUser?.createdAt ? (
-              <View style={styles.userInfoRow}>
-                <View style={styles.userInfoValueContainer}>
-                  <Text style={styles.userInfoLabel}>Member Since</Text>
-                  <Text style={styles.userInfoValue}>
-                    {formatDateLong(displayUser.createdAt)}
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.emptyStateText}>
+              {isMe
+                ? "No profile details yet. Tap Update profile to add your information."
+                : "No profile details available."}
+            </Text>
+          )}
         </Card.Content>
       </Card>
     </ScrollView>
@@ -377,6 +355,8 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
       contentContainerStyle={styles.sceneContent}
       refreshControl={refreshControl}
     >
+      {renderStatusBanner()}
+
       <Card mode="contained" style={styles.menuCard}>
         <List.Item
           title="Matches"
@@ -463,6 +443,17 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
             descriptionStyle={styles.listItemDescription}
           />
         ) : null}
+        {isMe ? (
+          <List.Item
+            title="Settings"
+            description="Account, legal, and support"
+            left={(props) => <List.Icon {...props} icon="cog-outline" />}
+            onPress={() => router.push("/settings" as Href)}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
+          />
+        ) : null}
       </Card>
     </ScrollView>
   );
@@ -479,7 +470,7 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
       }
     },
     [
-      displayUser,
+      profileFields,
       isMe,
       refreshing,
       onRefresh,
@@ -487,36 +478,12 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
       router,
       showInsights,
       showShots,
+      statusMessage,
     ],
   );
 
   return (
     <View style={styles.root}>
-      <View style={styles.topSection}>
-        {showLoading ? (
-          <Text style={styles.loadingText}>Loading…</Text>
-        ) : profileError || error ? (
-          <Text style={styles.errorText}>{profileError || error}</Text>
-        ) : null}
-
-        {isMe ? (
-          <Card style={styles.accountCard}>
-            <Card.Content>
-              <TouchableOpacity
-                style={[styles.accountButton, styles.updateButton]}
-                onPress={() => setUpdateDialogVisible(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Update profile"
-              >
-                <Text style={[styles.accountButtonText, styles.updateButtonText]}>
-                  Update profile
-                </Text>
-              </TouchableOpacity>
-            </Card.Content>
-          </Card>
-        ) : null}
-      </View>
-
       <UpdateProfileDialog
         visible={updateDialogVisible}
         onClose={() => setUpdateDialogVisible(false)}
@@ -524,58 +491,15 @@ export function ProfileHomeScreen({ userId }: ProfileHomeScreenProps) {
         onSaved={refreshUser}
       />
 
-      <View style={styles.tabViewWrapper}>
-        <TournamentTabView
-          routes={PROFILE_TAB_ROUTES}
-          index={tabIndex}
-          onIndexChange={handleTabIndexChange}
-          renderScene={renderScene}
-          swipeEnabled
-          lazy
-        />
-      </View>
-
-      {isMe ? (
-        <View
-          style={[
-            styles.bottomActions,
-            { paddingBottom: Math.max(insets.bottom, DesignTokens.spacing[4]) },
-          ]}
-        >
-          <TouchableOpacity
-            style={[
-              styles.accountButton,
-              styles.deleteAccountButton,
-            ]}
-            onPress={() => router.push("/account-deletion")}
-            accessibilityRole="button"
-            accessibilityLabel="Delete account"
-          >
-            <Text
-              style={[
-                styles.accountButtonText,
-                styles.deleteAccountButtonText,
-              ]}
-            >
-              Delete account
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.accountButton,
-              styles.logoutButton,
-            ]}
-            onPress={handleLogout}
-            disabled={loggingOut}
-            accessibilityRole="button"
-            accessibilityLabel="Log out"
-          >
-            <Text style={[styles.accountButtonText, styles.logoutButtonText]}>
-              {loggingOut ? "Logging out…" : "Log out"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
+      <TournamentTabView
+        routes={PROFILE_TAB_ROUTES}
+        index={tabIndex}
+        onIndexChange={handleTabIndexChange}
+        renderScene={renderScene}
+        swipeEnabled
+        lazy
+        distributeTabs
+      />
     </View>
   );
 }

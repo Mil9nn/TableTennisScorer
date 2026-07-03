@@ -1,24 +1,20 @@
 import { DesignTokens } from "@/constants/designTokens";
-import { Icon } from "@/components/ui/Icon";
 import type { ProfileDisplayUser } from "@/contexts/ProfileContext";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { Avatar, Card, Text } from "react-native-paper";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const formatHand = (value: string) =>
-  value ? value.charAt(0).toUpperCase() + value.slice(1) : "Not specified";
+import { Avatar, Text } from "react-native-paper";
 
 const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: DesignTokens.colors.background.primary,
     padding: DesignTokens.spacing[4],
-    borderRadius: DesignTokens.borderRadius.none,
+    borderBottomWidth: 1,
+    borderBottomColor: DesignTokens.colors.border.light,
   },
   profileContent: {
-    gap: DesignTokens.spacing[4],
+    gap: DesignTokens.spacing[3],
   },
   profileHeader: {
     flexDirection: "row",
@@ -53,23 +49,15 @@ const styles = StyleSheet.create({
   userInfo: {
     flex: 1,
   },
-  subtitle: {
+  displayName: {
+    fontSize: DesignTokens.typography.fontSize["2xl"],
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.text.primary,
+  },
+  username: {
     fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.secondary,
+    color: DesignTokens.colors.text.tertiary,
     marginTop: DesignTokens.spacing[1],
-  },
-  userInfoFlex: {
-    flexDirection: "row",
-    gap: DesignTokens.spacing[12],
-  },
-  userInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-  },
-  userInfoValue: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.secondary,
   },
   bioText: {
     fontSize: DesignTokens.typography.fontSize.base,
@@ -98,78 +86,56 @@ export function ProfileHeader({
     (resolvedUserId.length > 0 ? resolvedUserId.slice(0, 2).toUpperCase() : "U");
 
   return (
-    <SafeAreaView edges={["top"]}>
-      <View style={styles.profileCard}>
-        <Card.Content style={styles.profileContent}>
-          <View style={styles.profileHeader}>
-            {showBackButton ? (
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => router.back()}
-                accessibilityRole="button"
-                accessibilityLabel="Go back"
-              >
-                <FontAwesome5
-                  name="chevron-left"
-                  size={16}
-                  color={DesignTokens.colors.text.secondary}
-                />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.backButton} />
-            )}
-            <View style={styles.avatarContainer}>
-              {user?.profileImage ? (
-                <Image
-                  source={{ uri: user.profileImage }}
-                  style={styles.profileImage}
-                  contentFit="cover"
-                  placeholder={initials}
-                  placeholderContentFit="contain"
-                />
-              ) : (
-                <Avatar.Text
-                  size={DesignTokens.components.avatar.size.lg}
-                  label={initials}
-                  style={styles.avatar}
-                />
-              )}
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.subtitle}>
-                {loading && !user
-                  ? "Loading…"
-                  : user?.fullName
-                    ? user.fullName
-                    : `UserId: ${resolvedUserId}`}
-              </Text>
-              <Text style={styles.subtitle}>
-                @{user?.username ? user.username : resolvedUserId}
-              </Text>
-            </View>
-          </View>
-
-          {user?.bio ? <Text style={styles.bioText}>{user.bio}</Text> : null}
-
-          {user?.location ? (
-            <View style={styles.userInfoFlex}>
-              <View style={styles.userInfoRow}>
-                <Icon name="map-pin" size={16} color={DesignTokens.colors.error} />
-                <Text style={styles.userInfoValue}>{user.location}</Text>
-              </View>
-
-              {user?.handedness ? (
-                <View style={styles.userInfoRow}>
-                  <Icon name="hand" size={16} color={DesignTokens.colors.info} />
-                  <Text style={styles.userInfoValue}>
-                    {formatHand(user.handedness)} Handed
-                  </Text>
-                </View>
-              ) : null}
-            </View>
+    <View style={styles.profileCard}>
+      <View style={styles.profileContent}>
+        <View style={styles.profileHeader}>
+          {showBackButton ? (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <FontAwesome5
+                name="chevron-left"
+                size={16}
+                color={DesignTokens.colors.text.secondary}
+              />
+            </TouchableOpacity>
           ) : null}
-        </Card.Content>
+          <View style={styles.avatarContainer}>
+            {user?.profileImage ? (
+              <Image
+                source={{ uri: user.profileImage }}
+                style={styles.profileImage}
+                contentFit="cover"
+                placeholder={initials}
+                placeholderContentFit="contain"
+              />
+            ) : (
+              <Avatar.Text
+                size={DesignTokens.components.avatar.size.lg}
+                label={initials}
+                style={styles.avatar}
+              />
+            )}
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.displayName}>
+              {loading && !user
+                ? "Loading…"
+                : user?.fullName
+                  ? user.fullName
+                  : `User ${resolvedUserId.slice(0, 8)}`}
+            </Text>
+            {user?.username ? (
+              <Text style={styles.username}>@{user.username}</Text>
+            ) : null}
+          </View>
+        </View>
+
+        {user?.bio ? <Text style={styles.bioText}>{user.bio}</Text> : null}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,8 +1,8 @@
 import MatchesList from "@/components/MatchesList";
+import { MatchQuickFilters } from "@/components/matches/MatchQuickFilters";
 import TeamMatchesList from "@/components/TeamMatchesList";
 import MatchesListSkeleton from "@/components/skeletons/MatchesListSkeleton";
 import TeamMatchesListSkeleton from "@/components/skeletons/TeamMatchesListSkeleton";
-import { ChoiceChip } from "@/components/ui/ChoiceChip";
 import { TournamentTabView, TabRoute } from "@/components/ui/TournamentTabView";
 import { TextInput } from "react-native";
 import { axiosInstance } from "@/lib/axiosInstance";
@@ -10,25 +10,16 @@ import { TeamMatch } from "@/types/match.type";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  LayoutAnimation,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useIndividualMatchFilters, useTeamMatchFilters } from "@/hooks/useFilters";
-import {
-  buildDateFilterFromPreset,
-  DATE_RANGE_QUICK_PRESETS,
-  type DateRangePresetId,
-} from "@/lib/dateRangePresets";
 import { DesignTokens } from "@/constants/designTokens";
 
 const ITEMS_PER_PAGE = 15;
@@ -38,41 +29,6 @@ const MATCH_TAB_ROUTES: TabRoute[] = [
   { key: "individual", title: "Individual" },
   { key: "team", title: "Team" },
 ];
-
-const INDIVIDUAL_TYPE_CHIPS = [
-  { label: "All", value: "" },
-  { label: "Singles", value: "singles" },
-  { label: "Doubles", value: "doubles" },
-];
-
-const TEAM_FORMAT_CHIPS = [
-  { label: "All", value: "" },
-  { label: "Swaythling", value: "five_singles" },
-  { label: "S-D-S", value: "single_double_single" },
-];
-
-const STATUS_CHIPS = [
-  { label: "All", value: "" },
-  { label: "Live", value: "in_progress" },
-  { label: "Scheduled", value: "scheduled" },
-  { label: "Completed", value: "completed" },
-];
-
-/** Scrollable quick date filters — order matters for UX. */
-const FEED_DATE_RANGE_CHIPS: { label: string; value: DateRangePresetId | "all" }[] = [
-  { label: "Any time", value: "all" },
-  ...DATE_RANGE_QUICK_PRESETS.map((p) => ({ label: p.label, value: p.id })),
-];
-
-function isFeedDateChipSelected(
-  value: DateRangePresetId | "all",
-  f: { datePreset: string; dateFrom: string; dateTo: string }
-): boolean {
-  if (value === "all") {
-    return !f.dateFrom?.trim() && !f.dateTo?.trim();
-  }
-  return f.datePreset === value;
-}
 
 interface IndividualMatch {
   _id: string;
@@ -107,8 +63,6 @@ export default function MatchesPage() {
   const individualFilters = useIndividualMatchFilters(300);
   const teamFilters = useTeamMatchFilters(300);
 
-  /** Quick filters (type / status / date chips) in the list header — start collapsed for more list space */
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const contentOpacity = React.useRef(new Animated.Value(0)).current;
   const contentTranslateY = React.useRef(new Animated.Value(10)).current;
@@ -230,43 +184,38 @@ export default function MatchesPage() {
     setTabIndex(index);
   }, []);
 
-  const clearQuickFiltersForActiveTab = useCallback(() => {
-    if (activeTab === "individual") {
-      individualFilters.setFilters({
-        type: "",
-        status: "",
-        datePreset: "",
-        dateFrom: "",
-        dateTo: "",
-      });
-    } else {
-      teamFilters.setFilters({
-        format: "",
-        status: "",
-        datePreset: "",
-        dateFrom: "",
-        dateTo: "",
-      });
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, [activeTab, individualFilters, teamFilters]);
+  const quickFilterValues = useMemo(
+    () =>
+      activeTab === "individual"
+        ? {
+            type: individualFilters.filters.type,
+            format: "",
+            status: individualFilters.filters.status,
+            datePreset: individualFilters.filters.datePreset,
+            dateFrom: individualFilters.filters.dateFrom,
+            dateTo: individualFilters.filters.dateTo,
+          }
+        : {
+            type: "",
+            format: teamFilters.filters.format,
+            status: teamFilters.filters.status,
+            datePreset: teamFilters.filters.datePreset,
+            dateFrom: teamFilters.filters.dateFrom,
+            dateTo: teamFilters.filters.dateTo,
+          },
+    [activeTab, individualFilters.filters, teamFilters.filters]
+  );
 
-  const handleNewMatch = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push("/match/create");
-  };
-
-  const toggleFilterChipsSection = useCallback(() => {
-    LayoutAnimation.configureNext({
-      duration: DesignTokens.animation.duration.normal,
-      create: {
-        type: LayoutAnimation.Types.easeInEaseOut,
-        property: LayoutAnimation.Properties.opacity,
-      },
-    });
-    setFiltersExpanded((v) => !v);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
+  const handleQuickFiltersChange = useCallback(
+    (updates: Partial<typeof quickFilterValues>) => {
+      if (activeTab === "individual") {
+        individualFilters.setFilters(updates);
+      } else {
+        teamFilters.setFilters(updates);
+      }
+    },
+    [activeTab, individualFilters, teamFilters]
+  );
 
   const renderFooter = useCallback(() => {
     const isLoadingMore = activeTab === "individual" ? individualLoadingMore : teamLoadingMore;
@@ -302,180 +251,6 @@ export default function MatchesPage() {
     individualMatches.length,
     teamMatches.length,
   ]);
-
-  const renderFilterChips = (tab: "individual" | "team") => {
-    const f = tab === "individual" ? individualFilters.filters : teamFilters.filters;
-    const hasDate = Boolean(f.dateFrom?.trim() || f.dateTo?.trim());
-    const hasQuickFiltersActive =
-      tab === "individual"
-        ? Boolean(f.type || f.status || hasDate)
-        : Boolean(f.format || f.status || hasDate);
-
-    return (
-      <View style={[styles.filterChipsSection, !filtersExpanded && styles.filterChipsSectionCollapsed]}>
-        <View style={[styles.filterChipsBar, filtersExpanded && styles.filterChipsBarExpanded]}>
-          <Pressable
-            style={styles.filterChipsBarLeftPress}
-            onPress={toggleFilterChipsSection}
-            accessibilityRole="button"
-            accessibilityLabel={filtersExpanded ? "Hide filters" : "Show filters"}
-          >
-            <View style={styles.filterChipsBarLeft}>
-              <Text style={styles.filterChipsBarTitle}>Filters</Text>
-              {hasQuickFiltersActive ? <View style={styles.filterActivePill} /> : null}
-            </View>
-          </Pressable>
-          <View style={styles.filterChipsBarActions}>
-            {hasQuickFiltersActive ? (
-              <TouchableOpacity
-                onPress={clearQuickFiltersForActiveTab}
-                activeOpacity={0.7}
-                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                style={styles.filterClearBtn}
-              >
-                <Text style={styles.filterClearBtnText}>Clear</Text>
-              </TouchableOpacity>
-            ) : null}
-            <Pressable
-              onPress={toggleFilterChipsSection}
-              style={styles.filterChipsChevronHit}
-              hitSlop={{ top: 10, bottom: 10, left: 8, right: 4 }}
-            >
-              <Ionicons
-                name={filtersExpanded ? "chevron-up" : "chevron-down"}
-                size={20}
-                color={DesignTokens.colors.text.secondary}
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        {filtersExpanded && (
-          <>
-            <View style={styles.filterLabeledRow}>
-              <Text style={styles.filterRowLabel} numberOfLines={2}>
-                {tab === "individual" ? "Match Type" : "Format"}
-              </Text>
-              <View style={styles.filterRowChipsWrap}>
-                {(tab === "individual" ? INDIVIDUAL_TYPE_CHIPS : TEAM_FORMAT_CHIPS).map((chip) => {
-                  const isSelected =
-                    tab === "individual"
-                      ? individualFilters.filters.type === chip.value
-                      : teamFilters.filters.format === chip.value;
-
-                  return (
-                    <ChoiceChip
-                      key={`${tab}-type-${chip.label}`}
-                      selected={isSelected}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        if (tab === "individual") {
-                          if (chip.value === "") {
-                            individualFilters.setFilter("type", "");
-                          } else {
-                            individualFilters.setFilter("type", isSelected ? "" : chip.value);
-                          }
-                        } else if (chip.value === "") {
-                          teamFilters.setFilter("format", "");
-                        } else {
-                          teamFilters.setFilter("format", isSelected ? "" : chip.value);
-                        }
-                      }}
-                    >
-                      {chip.label}
-                    </ChoiceChip>
-                  );
-                })}
-              </View>
-            </View>
-
-            <View style={styles.filterLabeledRow}>
-              <Text style={styles.filterRowLabel} numberOfLines={2}>
-                Match Status
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.filterRowScroll}
-                contentContainerStyle={styles.filterRowScrollContent}
-              >
-                {STATUS_CHIPS.map((chip) => {
-                  const isSelected =
-                    tab === "individual"
-                      ? individualFilters.filters.status === chip.value
-                      : teamFilters.filters.status === chip.value;
-                  const isLiveChip = chip.value === "in_progress";
-
-                  return (
-                    <ChoiceChip
-                      key={`${tab}-status-${chip.label}`}
-                      selected={isSelected}
-                      selectionTone={isLiveChip ? "live" : "default"}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        if (chip.value === "") {
-                          if (tab === "individual") {
-                            individualFilters.setFilter("status", "");
-                          } else {
-                            teamFilters.setFilter("status", "");
-                          }
-                        } else if (tab === "individual") {
-                          individualFilters.setFilter("status", isSelected ? "" : chip.value);
-                        } else {
-                          teamFilters.setFilter("status", isSelected ? "" : chip.value);
-                        }
-                      }}
-                    >
-                      {chip.label}
-                    </ChoiceChip>
-                  );
-                })}
-              </ScrollView>
-            </View>
-
-            <View style={styles.filterLabeledRow}>
-              <Text style={styles.filterRowLabel} numberOfLines={2}>
-                Date
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.filterRowScroll}
-                contentContainerStyle={styles.filterRowScrollContent}
-              >
-                {FEED_DATE_RANGE_CHIPS.map((chip) => {
-                  const rowFilters =
-                    tab === "individual" ? individualFilters.filters : teamFilters.filters;
-                  const selected = isFeedDateChipSelected(chip.value, {
-                    datePreset: rowFilters.datePreset,
-                    dateFrom: rowFilters.dateFrom,
-                    dateTo: rowFilters.dateTo,
-                  });
-                  return (
-                    <ChoiceChip
-                      key={`${tab}-date-${chip.value}`}
-                      selected={selected}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        const built = buildDateFilterFromPreset(chip.value);
-                        if (tab === "individual") {
-                          individualFilters.setFilters(built);
-                        } else {
-                          teamFilters.setFilters(built);
-                        }
-                      }}
-                    >
-                      {chip.label}
-                    </ChoiceChip>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </>
-        )}
-      </View>
-    );
-  };
 
   const renderScene = useCallback(
     ({ route }: { route: TabRoute }) => {
@@ -610,8 +385,11 @@ export default function MatchesPage() {
             </View>
           </View>
           
-          {/* Filter Chips Section */}
-          {renderFilterChips(activeTab)}
+          <MatchQuickFilters
+            tab={activeTab}
+            filters={quickFilterValues}
+            onFiltersChange={handleQuickFiltersChange}
+          />
         </View>
       </Animated.View>
 
@@ -680,115 +458,9 @@ const styles = StyleSheet.create({
     
   tabViewWrapper: {
     flex: 1,
-    backgroundColor: "#f1f5f9",
   },
   scene: {
     flex: 1,
-    backgroundColor: "#f1f5f9",
-  },
-
-  // Modern filter chips section
-  filterChipsSection: {
-    paddingHorizontal: DesignTokens.spacing[4],
-    gap: DesignTokens.spacing[4],
-    backgroundColor: DesignTokens.colors.background.tertiary,
-    borderRadius: DesignTokens.borderRadius.sm,
-    marginTop: DesignTokens.spacing[2],
-  },
-  filterChipsSectionCollapsed: {
-    gap: 0,
-  },
-  filterChipsBar: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  filterChipsBarLeftPress: {
-    flex: 1,
-    minWidth: 0,
-    paddingRight: DesignTokens.spacing[2],
-    height: 40,
-  },
-  filterChipsBarActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 0,
-    gap: DesignTokens.spacing[1],
-  },
-  filterChipsBarExpanded: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DesignTokens.colors.border.light,
-    paddingBottom: DesignTokens.spacing[3],
-    marginBottom: DesignTokens.spacing[1],
-  },
-  filterChipsBarLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-  },
-  filterChipsBarTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    color: DesignTokens.colors.text.primary,
-    letterSpacing: DesignTokens.typography.letterSpacing.tight,
-    marginTop: DesignTokens.spacing[4],
-  },
-  filterActivePill: {
-    width: DesignTokens.spacing[2],
-    height: DesignTokens.spacing[2],
-    borderRadius: DesignTokens.borderRadius.sm,
-    backgroundColor: DesignTokens.colors.primary[600],
-    ...DesignTokens.shadows.sm,
-  },
-  filterClearBtn: {
-    paddingVertical: DesignTokens.spacing[2],
-    paddingHorizontal: DesignTokens.spacing[4],
-    borderRadius: DesignTokens.borderRadius.full,
-    backgroundColor: DesignTokens.colors.primary[50],
-  },
-  filterClearBtnText: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.primary[700],
-  },
-  filterChipsChevronHit: {
-    padding: DesignTokens.spacing[1],
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  // Labeled filter rows: label column + chips (aligned across rows)
-  filterLabeledRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: DesignTokens.spacing[2],
-    gap: DesignTokens.spacing[3],
-  },
-  filterRowLabel: {
-    width: 90,
-    flexShrink: 0,
-    paddingTop: DesignTokens.spacing[1],
-    fontSize: DesignTokens.typography.fontSize.base,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.secondary,
-    lineHeight: DesignTokens.typography.fontSize.sm * 1.35,
-  },
-  filterRowChipsWrap: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-    minWidth: 0,
-  },
-  filterRowScroll: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  filterRowScrollContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-    paddingVertical: 0,
   },
 
   // Modern empty state design

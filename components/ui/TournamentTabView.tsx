@@ -1,11 +1,9 @@
 import React from 'react';
 import { TabView, SceneRendererProps, NavigationState } from 'react-native-tab-view';
-import { Animated, StyleSheet, View, Text, Dimensions, Pressable, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
 import { DesignTokens } from '@/constants/designTokens';
 
 const tokens = DesignTokens;
-const { width: screenWidth } = Dimensions.get('window');
 
 export interface TabRoute {
   key: string;
@@ -25,46 +23,27 @@ export interface TournamentTabViewProps {
   animationEnabled?: boolean;
   lazy?: boolean;
   tabBarPosition?: 'top' | 'bottom';
+  distributeTabs?: boolean;
 }
 
 const CustomTabBar: React.FC<{
   navigationState: NavigationState<TabRoute>;
-  position: Animated.AnimatedAddition<number>;
   onIndexChange: (index: number) => void;
   jumpTo: (key: string) => void;
-}> = ({ navigationState, position, onIndexChange, jumpTo }) => {
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.tabBarScroll}
-      
-    >
-      {navigationState.routes.map((route, index) => {
-        const isFocused = navigationState.index === index;
-        const inputRange = navigationState.routes.map((_, i) => i);
-        const opacity = position.interpolate({
-          inputRange,
-          outputRange: inputRange.map(i => (i === index ? 1 : 0.6)),
-        });
+  distributeTabs?: boolean;
+}> = ({ navigationState, onIndexChange, jumpTo, distributeTabs = false }) => {
+  const tabItems = navigationState.routes.map((route, index) => {
+    const isFocused = navigationState.index === index;
 
-        const scale = position.interpolate({
-          inputRange,
-          outputRange: inputRange.map(i => (i === index ? 1.05 : 1)),
-        });
-
-        return (
-          <Animated.View
-            key={route.key}
-            style={[
-              styles.tabItem,
-              isFocused && styles.tabItemActive,
-              {
-                opacity,
-                transform: [{ scale }],
-              },
-            ]}
-          >
+    return (
+      <View
+        key={route.key}
+        style={[
+          styles.tabItem,
+          distributeTabs && styles.tabItemDistributed,
+          isFocused && styles.tabItemActive,
+        ]}
+      >
             <Pressable
               style={[
                 styles.tabTouchable,
@@ -95,9 +74,21 @@ const CustomTabBar: React.FC<{
                 )}
               </View>
             </Pressable>
-          </Animated.View>
-        );
-      })}
+          </View>
+    );
+  });
+
+  if (distributeTabs) {
+    return <View style={styles.tabBarRow}>{tabItems}</View>;
+  }
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.tabBarScroll}
+    >
+      {tabItems}
     </ScrollView>
   );
 };
@@ -112,6 +103,7 @@ export const TournamentTabView: React.FC<TournamentTabViewProps> = ({
   lazy = true,
   tabBarPosition = 'top',
   renderTabBar,
+  distributeTabs = false,
 }) => {
   return (
     <TabView
@@ -126,9 +118,9 @@ export const TournamentTabView: React.FC<TournamentTabViewProps> = ({
         ((props) => (
           <CustomTabBar
             navigationState={props.navigationState}
-            position={props.position}
             onIndexChange={onIndexChange}
             jumpTo={props.jumpTo}
+            distributeTabs={distributeTabs}
           />
         ))
       }
@@ -150,7 +142,12 @@ const styles = StyleSheet.create({
     maxHeight: 40,
     borderBottomColor: tokens.colors.border.light,
   },
-  
+  tabBarRow: {
+    flexDirection: 'row',
+    maxHeight: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border.light,
+  },
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -158,6 +155,10 @@ const styles = StyleSheet.create({
     width: 'auto',
     borderBottomWidth: 2,
     borderBottomColor: tokens.colors.border.light,
+  },
+  tabItemDistributed: {
+    flex: 1,
+    minWidth: 0,
   },
   tabItemActive: {
     borderBottomColor: tokens.colors.primary[600],

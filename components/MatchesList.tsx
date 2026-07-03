@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import MatchStatusBadge from "@/components/MatchStatusBadge";
+import { MatchCardMetaRow } from "@/components/matches/MatchCardMetaRow";
 import { normalizeMatchIdParam } from "@/lib/normalizeMatchId";
 import { formatApiDateShort } from "@/lib/utils";
 import { DesignTokens } from "@/constants/designTokens";
@@ -168,6 +168,10 @@ export default function MatchesList({
       ? `${displayName(match.participants?.[2], "Player 3")} & ${displayName(match.participants?.[3], "Player 4")}`
       : displayName(match.participants?.[1], "Player 2");
 
+    const metaTailParts = [formatApiDateShort(match.createdAt) || "—"];
+    if (match.city || match.venue) metaTailParts.push(match.city || match.venue);
+    if (match.tournament?.name) metaTailParts.push(match.tournament.name);
+
     return (
       <View style={styles.rowShell}>
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -207,18 +211,6 @@ export default function MatchesList({
             animationRefs[matchId].start();
           }}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.matchTypeContainer}>
-              <Text style={styles.matchTypeText} numberOfLines={1}>
-                {formatMatchTypeLabel(match.matchType)}
-              </Text>
-            </View>
-            <MatchStatusBadge
-              status={match.status}
-              matchDuration={match.matchDuration}
-            />
-          </View>
-
           <View style={styles.matchContent}>
             <View style={styles.playerSection}>
               <View
@@ -262,7 +254,7 @@ export default function MatchesList({
                   <Text style={styles.scoreText}>
                     {score.side1}
                   </Text>
-                  <Text style={styles.scoreSeparator}>-</Text>
+                  <Text style={styles.scoreSeparator}>—</Text>
                   <Text style={styles.scoreText}>
                     {score.side2}
                   </Text>
@@ -319,31 +311,12 @@ export default function MatchesList({
             </View>
           </View>
 
-          <View>
-            <View style={styles.metaRow}>
-              <View style={styles.metaItem}>
-                <Text style={styles.metaText}>
-                  {formatApiDateShort(match.createdAt) || "—"}
-                </Text>
-              </View>
-              {(match.city || match.venue) && (
-                <View style={styles.metaItem}>
-                  <Text style={styles.metaDot}>•</Text>
-                  <Text style={styles.metaText} numberOfLines={1}>
-                    {match.city || match.venue}
-                  </Text>
-                </View>
-              )}
-              {match.tournament?.name ? (
-                <View style={styles.metaItem}>
-                  <Text style={styles.metaDot}>•</Text>
-                  <Text style={styles.metaText} numberOfLines={1}>
-                    {match.tournament.name}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
+          <MatchCardMetaRow
+            leadLabel={formatMatchTypeLabel(match.matchType)}
+            status={match.status}
+            matchDuration={match.matchDuration}
+            tailParts={metaTailParts}
+          />
         </TouchableOpacity>
         </Animated.View>
       </View>
@@ -399,13 +372,13 @@ const styles = StyleSheet.create({
   },
   listHeaderBleed: {
     marginHorizontal: -DesignTokens.spacing[2],
-    marginTop: -DesignTokens.spacing[2],
     marginBottom: DesignTokens.spacing[2],
   },
   listFrame: {
     flex: 1,
     backgroundColor: DesignTokens.colors.background.tertiary,
-    padding: DesignTokens.spacing[2],
+    paddingHorizontal: DesignTokens.spacing[2],
+    paddingBottom: DesignTokens.spacing[2],
   },
   rowShell: {
     borderBottomWidth: 1,
@@ -515,12 +488,12 @@ const styles = StyleSheet.create({
     gap: DesignTokens.spacing[1],
   },
   scoreText: {
-    fontSize: DesignTokens.typography.fontSize.xl,
+    fontSize: DesignTokens.typography.fontSize.lg,
     fontWeight: DesignTokens.typography.fontWeight.bold,
     color: DesignTokens.colors.text.primary,
   },
   scoreSeparator: {
-    fontSize: DesignTokens.typography.fontSize.lg,
+    fontSize: DesignTokens.typography.fontSize.base,
     fontWeight: DesignTokens.typography.fontWeight.medium,
     color: DesignTokens.colors.text.tertiary,
   },
@@ -529,26 +502,6 @@ const styles = StyleSheet.create({
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.text.tertiary,
     letterSpacing: DesignTokens.typography.letterSpacing.wide,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: DesignTokens.spacing[2],
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[1],
-  },
-  metaText: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    fontWeight: DesignTokens.typography.fontWeight.normal,
-    color: DesignTokens.colors.text.tertiary,
-  },
-  metaDot: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    color: DesignTokens.colors.text.tertiary,
   },
   avatarImg: {
     width: DesignTokens.spacing[14],

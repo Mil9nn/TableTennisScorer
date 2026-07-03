@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
 import { DesignTokens } from "@/constants/designTokens";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { AuthLegalFooter } from "@/components/auth/AuthLegalFooter";
 import Toast from "react-native-toast-message";
 
 const RegisterPage = () => {
@@ -400,9 +400,6 @@ const RegisterPage = () => {
                   <Text style={styles.registerButtonText}>Sign Up</Text>
                 )}
               </TouchableOpacity>
-
-              <AuthDivider />
-              <GoogleSignInButton label="Sign up with Google" />
             </View>
 
             <View style={styles.footer}>
@@ -411,6 +408,8 @@ const RegisterPage = () => {
                 <Text style={styles.loginLink}>Log In</Text>
               </TouchableOpacity>
             </View>
+
+            <AuthLegalFooter showSignupConsent />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

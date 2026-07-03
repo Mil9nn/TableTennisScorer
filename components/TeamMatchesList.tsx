@@ -4,7 +4,7 @@ import { TeamMatch } from "@/types/match.type";
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
-import MatchStatusBadge from "@/components/MatchStatusBadge";
+import { MatchCardMetaRow } from "@/components/matches/MatchCardMetaRow";
 import { DesignTokens } from "@/constants/designTokens";
 
 const AVATAR_SIZE = DesignTokens.spacing[14];
@@ -78,6 +78,11 @@ export default function TeamMatchesList({
     const team1Won = match.winnerTeam === "team1";
     const team2Won = match.winnerTeam === "team2";
 
+    const metaTailParts = [formatApiDateShort(match.createdAt) || "—"];
+    const location = match.city || match.venue;
+    if (location) metaTailParts.push(location);
+    if (match.tournament?.name) metaTailParts.push(match.tournament.name);
+
     return (
       <View style={index < data.length - 1 ? styles.cardMargin : undefined}>
         <Pressable
@@ -91,18 +96,6 @@ export default function TeamMatchesList({
           {({ pressed }) => (
             <View style={styles.rowShell}>
               <View style={[styles.card, index === 0 && styles.cardFirst, pressed && styles.cardPressed]}>
-                <View style={styles.cardHeaderRow}>
-                  <Text style={styles.headerFormat} numberOfLines={1}>
-                    {formatLabelForMeta(match)}
-                  </Text>
-                  <View style={styles.headerStatusWrap}>
-                    <MatchStatusBadge
-                      status={match.status}
-                      matchDuration={match.matchDuration}
-                    />
-                  </View>
-                </View>
-
                 <View style={styles.rowTop}>
                   <View style={styles.sideBlock}>
                     <TeamAvatar name={match.team1?.name} logo={match.team1?.logo} />
@@ -116,7 +109,7 @@ export default function TeamMatchesList({
 
                   {isCompleted ? (
                     <Text style={styles.scoreText}>
-                      {match.finalScore?.team1Matches || 0} - {match.finalScore?.team2Matches || 0}
+                      {match.finalScore?.team1Matches || 0} — {match.finalScore?.team2Matches || 0}
                     </Text>
                   ) : (
                     <Text style={styles.vsText}>Vs</Text>
@@ -133,26 +126,13 @@ export default function TeamMatchesList({
                   </View>
                 </View>
 
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaText}>
-                    {formatApiDateShort(match.createdAt) || "—"}
-                  </Text>
-                  {(match.city || match.venue) && (
-                    <>
-                      <Text style={styles.metaDot}>•</Text>
-                      <Text style={styles.metaText} numberOfLines={1}>
-                        {match.city || match.venue}
-                      </Text>
-                    </>
-                  )}
-                  {match.tournament?.name ? (
-                    <>
-                      <Text style={styles.metaDot}>•</Text>
-                      <Text style={styles.metaText} numberOfLines={1}>
-                        {match.tournament.name}
-                      </Text>
-                    </>
-                  ) : null}
+                <View style={styles.metaRowWrap}>
+                  <MatchCardMetaRow
+                    leadLabel={formatLabelForMeta(match)}
+                    status={match.status}
+                    matchDuration={match.matchDuration}
+                    tailParts={metaTailParts}
+                  />
                 </View>
               </View>
             </View>
@@ -207,13 +187,13 @@ const styles = StyleSheet.create({
   },
   listHeaderBleed: {
     marginHorizontal: -DesignTokens.spacing[2],
-    marginTop: -DesignTokens.spacing[2],
     marginBottom: DesignTokens.spacing[2],
   },
   listFrame: {
     flex: 1,
     backgroundColor: DesignTokens.colors.background.tertiary,
-    padding: DesignTokens.spacing[2],
+    paddingHorizontal: DesignTokens.spacing[2],
+    paddingBottom: DesignTokens.spacing[2],
   },
   rowShell: {
     borderBottomWidth: 1,
@@ -281,7 +261,7 @@ const styles = StyleSheet.create({
     color: DesignTokens.colors.success,
   },
   scoreText: {
-    fontSize: DesignTokens.components.score.fontSize,
+    fontSize: DesignTokens.typography.fontSize.base,
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.text.primary,
     flexShrink: 0,
@@ -292,22 +272,8 @@ const styles = StyleSheet.create({
     color: DesignTokens.colors.text.tertiary,
     flexShrink: 0,
   },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
+  metaRowWrap: {
     marginTop: DesignTokens.spacing[4],
-    gap: DesignTokens.spacing[2],
-  },
-  metaText: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    fontWeight: DesignTokens.typography.fontWeight.normal,
-    color: DesignTokens.colors.text.tertiary,
-    flexShrink: 1,
-  },
-  metaDot: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    color: DesignTokens.colors.text.tertiary,
   },
   teamAvatarImg: {
     borderWidth: DesignTokens.components.avatar.borderWidth,

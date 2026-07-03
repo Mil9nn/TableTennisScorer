@@ -1,6 +1,5 @@
-import Constants from "expo-constants";
 import * as Linking from "expo-linking";
-
+import { getWebOrigin } from "@/lib/appOrigin";
 const JOIN_CODE_REGEX = /^[A-Z0-9]{6}$/;
 const APP_SCHEME = "tabletennisscorer";
 
@@ -73,15 +72,6 @@ export function buildAppJoinUrl(code: string): string {
   return Linking.createURL("/tournaments/join", {
     queryParams: { code: normalized },
   });
-}
-
-/** @deprecated Web join page; native app should use {@link buildAppJoinUrl}. */
-export function getWebOrigin(): string {
-  const configured = Constants.expoConfig?.extra?.webUrl;
-  if (typeof configured === "string" && configured.length > 0) {
-    return configured.replace(/\/$/, "");
-  }
-  return "https://table-tennis-xi.vercel.app";
 }
 
 /** @deprecated Use {@link buildAppJoinUrl} in the native app. */

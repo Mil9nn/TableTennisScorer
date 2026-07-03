@@ -1,6 +1,7 @@
 import TeamListSkeleton from "@/components/skeletons/TeamListSkeleton";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
+import { ListFetchError } from "@/components/ui/ListFetchError";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { TabRoute, TournamentTabView } from "@/components/ui/TournamentTabView";
 import { DesignTokens } from "@/constants/designTokens";
@@ -57,7 +58,7 @@ const teamGlassAvatarUri = (team: Pick<Team, "name" | "_id">) => {
   return `https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed)}`;
 };
 
-const LOGO_BASE_URL = "https://table-tennis-xi.vercel.app";
+import { getWebOrigin } from "@/lib/appOrigin";
 
 const resolveLogoUri = (logo?: string) => {
   if (!logo) return "";
@@ -66,7 +67,8 @@ const resolveLogoUri = (logo?: string) => {
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     return trimmed;
   }
-  return `${LOGO_BASE_URL}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+  const base = getWebOrigin();
+  return `${base}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
 };
 
 export default function TeamsScreen() {
@@ -78,23 +80,27 @@ export default function TeamsScreen() {
   const [tabIndex, setTabIndex] = useState(0);
   const [cityMenuVisible, setCityMenuVisible] = useState(false);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
 
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
+    setFetchError(null);
+    setLoading(true);
     try {
       const res = await axiosInstance.get("/teams");
       setTeams(res.data.teams || []);
     } catch (err) {
       console.error("Error fetching teams", err);
+      setFetchError("We couldn't load teams. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchTeams();
-  }, []);
+  }, [fetchTeams]);
 
   const myTeams = useMemo(() => {
     if (!user) return [];
@@ -278,6 +284,14 @@ export default function TeamsScreen() {
         );
       }
 
+      if (fetchError && teams.length === 0) {
+        return (
+          <View style={styles.scene}>
+            <ListFetchError message={fetchError} onRetry={fetchTeams} retrying={loading} />
+          </View>
+        );
+      }
+
       if (!data.length) {
         return <View style={styles.scene}>{renderEmptyState(tab)}</View>;
       }
@@ -295,13 +309,19 @@ export default function TeamsScreen() {
         </View>
       );
     },
-    [loading, filteredMyTeams, filteredAllTeams, renderEmptyState],
+    [loading, filteredMyTeams, filteredAllTeams, renderEmptyState, fetchError, teams.length, fetchTeams],
   );
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
       {/* Header - matching Next.js design */}
       <View style={styles.headerContainer}>
+        <View style={styles.pageTitleRow}>
+          <View style={styles.pageTitleBlock}>
+            <Text style={styles.pageTitle}>Teams</Text>
+            <Text style={styles.pageSubtitle}>Clubs and squads in your area</Text>
+          </View>
+        </View>
         {/* Search Row */}
         <View style={styles.searchRow}>
           <View style={styles.searchInputContainer}>
@@ -432,6 +452,27 @@ const styles = StyleSheet.create({
     paddingBottom: DesignTokens.spacing[3],
     borderBottomWidth: 1,
     borderBottomColor: DesignTokens.colors.border.light,
+  },
+  pageTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: DesignTokens.spacing[3],
+    paddingTop: DesignTokens.spacing[2],
+  },
+  pageTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pageTitle: {
+    fontSize: DesignTokens.typography.fontSize.xl,
+    fontWeight: DesignTokens.typography.fontWeight.bold,
+    color: DesignTokens.colors.text.primary,
+  },
+  pageSubtitle: {
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.text.tertiary,
+    marginTop: 2,
   },
   searchRow: {
     flexDirection: "row",

@@ -1,0 +1,10 @@
+# Shrink EAS upload — these are not needed on the build server
+.expo/
+.expo-test-export/
+.agents/
+builds/
+dist/
+credentials/
+*.tsbuildinfo
+tsc-*.txt
+manual-test-commentary.js

@@ -1,4 +1,4 @@
-import { DesignTokens } from "@/constants/designTokens";
+﻿import { DesignTokens } from "@/constants/designTokens";
 import React, { useState } from "react";
 import {
   Pressable,
@@ -86,9 +86,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: tokens.borderRadius.sm,
-    paddingHorizontal: tokens.spacing[2],
-    paddingVertical: tokens.spacing[1],
+    borderRadius: tokens.borderRadius.full,
+    minHeight: 36,
+    paddingHorizontal: tokens.spacing[4],
+    paddingVertical: tokens.spacing[2],
+    borderWidth: 1,
+    borderColor: tokens.colors.border.medium,
   },
   pressablePressed: {
     opacity: 0.92,
@@ -100,6 +103,8 @@ const styles = StyleSheet.create({
   },
   pressableSelectedLive: {
     backgroundColor: tokens.colors.error,
+    borderWidth: 1,
+    borderColor: tokens.colors.error,
   },
   label: {
     fontSize: DesignTokens.typography.fontSize.base,
@@ -113,6 +118,7 @@ const styles = StyleSheet.create({
     color: tokens.colors.info,
   },
   labelSelectedLive: {
-    color: tokens.colors.error,
+    color: tokens.colors.white,
   },
 });
+

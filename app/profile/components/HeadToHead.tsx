@@ -4,8 +4,6 @@ import { Image as ExpoImage } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const LOGO_BASE_URL = "https://table-tennis-xi.vercel.app";
-
 const resolveUserAvatarUri = (user: { _id?: string; fullName?: string; username?: string; profileImage?: string }) => {
   const profileImage = user.profileImage?.trim();
   if (profileImage) return profileImage;

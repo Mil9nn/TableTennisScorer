@@ -37,6 +37,10 @@ yarn-error.*
 .env
 .env*.local
 
+# release artifacts & signing keys (use EAS credentials instead)
+builds/
+credentials/
+
 # typescript
 *.tsbuildinfo
 

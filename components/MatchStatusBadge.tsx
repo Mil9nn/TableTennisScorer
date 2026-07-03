@@ -7,26 +7,27 @@ type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 type Props = {
   status: MatchStatus | string;
   matchDuration?: number;
+  compact?: boolean;
 };
 
-export default function MatchStatusBadge({ status, matchDuration }: Props) {
-  // For completed matches, always show duration if available, regardless of status value
+export function getMatchStatusLabel(status: MatchStatus | string, matchDuration?: number): string {
   const isCompletedMatch = status === "completed" || (matchDuration != null && matchDuration > 0);
-  
-  const label =
-    status === "in_progress"
-      ? "Live"
-      : isCompletedMatch
-        ? matchDuration != null && matchDuration > 0
-          ? formatTimeDuration(matchDuration)
-          : "Completed"
-        : status === "scheduled"
-          ? "Scheduled"
-          : status === "cancelled"
-            ? "Cancelled"
-            : matchDuration != null && matchDuration > 0
-              ? formatTimeDuration(matchDuration)
-              : status || "Unknown";
+
+  if (status === "in_progress") return "Live";
+  if (isCompletedMatch) {
+    return matchDuration != null && matchDuration > 0
+      ? formatTimeDuration(matchDuration)
+      : "Completed";
+  }
+  if (status === "scheduled") return "Scheduled";
+  if (status === "cancelled") return "Cancelled";
+  if (matchDuration != null && matchDuration > 0) return formatTimeDuration(matchDuration);
+  return status || "Unknown";
+}
+
+export default function MatchStatusBadge({ status, matchDuration, compact = false }: Props) {
+  const isCompletedMatch = status === "completed" || (matchDuration != null && matchDuration > 0);
+  const label = getMatchStatusLabel(status, matchDuration);
 
   const getBadgeStyle = () => {
     // Use completed style for matches that appear completed (have duration)
@@ -77,6 +78,7 @@ export default function MatchStatusBadge({ status, matchDuration }: Props) {
     <View
       style={[
         styles.badge,
+        compact && styles.badgeCompact,
         {
           backgroundColor: badge.bg,
           borderColor: badge.border,
@@ -104,6 +106,11 @@ const styles = StyleSheet.create({
     borderRadius: 999, // pill
     borderWidth: 1,
     alignSelf: "flex-start",
+  },
+  badgeCompact: {
+    gap: 4,
+    paddingHorizontal: DesignTokens.spacing[2],
+    paddingVertical: 2,
   },
   badgeText: {
     fontSize: DesignTokens.typography.fontSize.xs,

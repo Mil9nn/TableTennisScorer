@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRouter, useFocusEffect, useNavigation } from "expo-router";
+import { useRouter, useFocusEffect, useNavigation, type Href } from "expo-router";
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
 import { DesignTokens } from "@/constants/designTokens";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { AuthDivider, GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { AuthLegalFooter } from "@/components/auth/AuthLegalFooter";
 import Toast from "react-native-toast-message";
 
 const LoginPage = () => {
@@ -319,12 +319,12 @@ const LoginPage = () => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.forgotPasswordButton}>
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={() => router.push("/auth/forgot-password" as Href)}
+          >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
-
-          <AuthDivider />
-          <GoogleSignInButton label="Continue with Google" />
         </View>
 
         <View style={styles.footer}>
@@ -333,6 +333,8 @@ const LoginPage = () => {
             <Text style={styles.registerLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
+
+        <AuthLegalFooter />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -1,20 +1,10 @@
 import axios from "axios";
-import Constants from "expo-constants";
-
-const getBaseUrl = (): string => {
-  if (__DEV__) {
-    // Derive the dev server host from Metro's hostUri (e.g. "192.168.1.4:8081" → "192.168.1.4")
-    const metroHost = Constants.expoConfig?.hostUri?.split(":")[0];
-    const host = metroHost || "localhost";
-    return `http://${host}:3000/api/`;
-  }
-  return "https://table-tennis-xi.vercel.app/api/";
-};
+import { getApiBaseUrl } from "@/lib/appOrigin";
 
 // Do not set a default Content-Type. If it is forced to application/json, axios will JSON-serialize
 // FormData and break multipart uploads. JSON bodies still get application/json automatically.
 export const axiosInstance = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
 });
 

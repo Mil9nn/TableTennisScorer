@@ -14,7 +14,6 @@ interface AuthState {
   fetchUser: () => Promise<void>;
   login: (credentials: LoginForm) => Promise<void>;
   register: (data: RegisterForm) => Promise<{ requiresVerification?: boolean; message?: string }>;
-  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: (data: {
     confirmation: "DELETE";
@@ -84,9 +83,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw error;
       }
 
-      if (status === 400 && error?.response?.data?.useGoogleAuth) {
-        Alert.alert("Use Google sign-in", message);
-      } else if (status === 429) {
+      if (status === 429) {
         Alert.alert("Too many attempts", "Please wait a few minutes and try again.");
       } else if (status !== 403) {
         Alert.alert("Login failed", message);
@@ -113,32 +110,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const message =
         error?.response?.data?.message || "Registration failed. Please try again.";
 
-      if (status === 400 && error?.response?.data?.useGoogleAuth) {
-        Alert.alert("Use Google sign-in", message);
-      } else if (status === 400 && error?.response?.data?.errors?.length) {
+      if (status === 400 && error?.response?.data?.errors?.length) {
         const firstError = error.response.data.errors[0]?.message;
         Alert.alert("Validation error", firstError || message);
       } else {
         Alert.alert("Registration failed", message);
       }
-      throw error;
-    } finally {
-      set({ authLoading: false });
-    }
-  },
-
-  async loginWithGoogle(idToken) {
-    set({ authLoading: true });
-    try {
-      const response = await axiosInstance.post("auth/google", { idToken });
-      if (response.data.user) {
-        set({ user: response.data.user, authResolved: true });
-      }
-    } catch (error: AxiosError | any) {
-      const message =
-        error?.response?.data?.message ||
-        "Google sign-in failed. Please try again.";
-      Alert.alert("Sign-in failed", message);
       throw error;
     } finally {
       set({ authLoading: false });

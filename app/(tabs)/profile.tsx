@@ -1,14 +1,16 @@
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileHomeScreen } from "@/components/profile/ProfileHomeScreen";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
+import { DesignTokens } from "@/constants/designTokens";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function ProfileTabContent() {
   const { userId, user, loading } = useProfile();
 
   return (
-    <View style={styles.root}>
+    <View style={styles.content}>
       <ProfileHeader
         userId={userId}
         user={user}
@@ -35,14 +37,20 @@ export default function ProfileTab() {
   if (!user?._id) return null;
 
   return (
-    <ProfileProvider userId={user._id}>
-      <ProfileTabContent />
-    </ProfileProvider>
+    <SafeAreaView style={styles.root} edges={["top"]}>
+      <ProfileProvider userId={user._id}>
+        <ProfileTabContent />
+      </ProfileProvider>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+    backgroundColor: DesignTokens.colors.background.primary,
+  },
+  content: {
     flex: 1,
   },
   centered: {

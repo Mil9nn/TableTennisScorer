@@ -1,13 +1,15 @@
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
+import { DesignTokens } from "@/constants/designTokens";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { View, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function ProfileLayoutContent() {
   const { userId, user, loading } = useProfile();
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root} edges={["top"]}>
       <ProfileHeader userId={userId} user={user} loading={loading} />
       <Stack
         screenOptions={{
@@ -28,7 +30,7 @@ function ProfileLayoutContent() {
         <Stack.Screen name="insights" options={{ title: "Insights" }} />
         <Stack.Screen name="shots" options={{ title: "Shots" }} />
       </Stack>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -45,6 +47,7 @@ export default function ProfileUserLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: DesignTokens.colors.background.primary,
   },
   stackContent: {
     flex: 1,

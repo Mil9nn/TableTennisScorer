@@ -9,21 +9,29 @@
     "newArchEnabled": true,
     "extra": {
       "socketUrl": "http://10.0.2.2:3001",
-      "apiUrl": "http://10.0.2.2:3000",
-      "webUrl": "https://table-tennis-xi.vercel.app",
-      "googleWebClientId": "628815435887-ptv663s3v2vr5337ksefnllumm1phagu.apps.googleusercontent.com",
-      "googleIosClientId": "628815435887-ptv663s3v2vr5337ksefnllumm1phagu.apps.googleusercontent.com",
-      "googleAndroidClientId": "628815435887-mf93fmfhm64fmt3n2usbuplrah2sn91j.apps.googleusercontent.com",
+      "apiUrl": "https://ttproapp.com",
+      "webUrl": "https://ttproapp.com",
       "eas": {
         "projectId": "2a6f733b-7e36-4165-be73-445d4471f2f0"
       }
     },
+    "icon": "./assets/web-app-manifest-512x512.png",
+    "splash": {
+      "image": "./assets/web-app-manifest-512x512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#EEF2FF"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ttproapp"
     },
     "android": {
       "package": "com.ttproapp",
-      "versionCode": 3,
+      "versionCode": 23,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/web-app-manifest-512x512.png",
+        "backgroundColor": "#EEF2FF"
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize"
