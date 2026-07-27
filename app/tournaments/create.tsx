@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,7 +10,6 @@ import {
   Text,
   View,
   Pressable,
-  TextInput,
   Platform,
   StyleSheet,
 } from "react-native";
@@ -24,15 +23,15 @@ import UserSearchInput from "@/app/match/components/UserSearchInput";
 import TeamSearchInput from "@/app/match/components/TeamSearchInput";
 import { Icon } from "@/components/ui/Icon";
 import { FormTextField } from "@/components/ui/FormTextField";
+import { LocationSelectRow } from "@/components/location/LocationSelectRow";
 import Toast from "react-native-toast-message";
-import { createFlowChoiceStyles as styles } from "@/styles/createFlowChoiceStyles";
-import { DesignTokens } from "@/constants/designTokens";
+import { getCreateFlowChoiceStyles } from "@/styles/createFlowChoiceStyles";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useLocationSelection } from "@/hooks/useLocationSelection";
 import {
   DEFAULT_CUSTOM_SUB_MATCHES,
   type TeamCustomSubMatchConfig,
 } from "@/lib/tournament/teamConfig";
-
-const tokens = DesignTokens;
 
 /** RHF can leave `{}` on unmounted nested fields; treat as missing so optional groups don't fail. */
 const emptyObjectToUndefined = (val: unknown) =>
@@ -64,8 +63,10 @@ const tournamentSchema = z
   .object({
     name: z.string().min(3, "Tournament name must be at least 3 characters"),
     startDate: z.date(),
-    city: z.string().min(2, "City is required"),
-    venue: z.string().min(1, "Venue is required"),
+    cityId: z.string().min(1, "Select a city"),
+    venueId: z.string().min(1, "Select a venue"),
+    city: z.string().optional(),
+    venue: z.string().optional(),
     format: z.enum(["round_robin", "knockout", "hybrid"]),
     category: z.enum(["individual", "team"]),
     // Hidden for team tournaments; API still expects a value — defaulted on submit.
@@ -173,8 +174,10 @@ const tournamentSchema = z
 type TournamentFormValues = {
   name: string;
   startDate: Date;
-  city: string;
-  venue: string;
+  cityId: string;
+  venueId: string;
+  city?: string;
+  venue?: string;
   format: "round_robin" | "knockout" | "hybrid";
   category: "individual" | "team";
   matchType?: "singles" | "doubles";
@@ -209,8 +212,8 @@ type TournamentFormValues = {
 
 const FIELD_LABELS: Record<string, string> = {
   name: "Tournament name",
-  city: "City",
-  venue: "Venue",
+  cityId: "City",
+  venueId: "Venue",
   setsPerMatch: "Sets per match",
   matchType: "Match type",
   teamConfig: "Team match settings",
@@ -257,27 +260,64 @@ const getFirstValidationMessage = (
   return null;
 };
 
-const Section = ({ label, children, description = "" }: { label: string; children: React.ReactNode; description?: string }) => (
-  <View className="mb-6 px-6">
-    <View className="mb-2">
-      <Text className="text-[11px] font-bold text-slate-600 capitalize tracking-[1.5px]">
-        {label}
-      </Text>
-      {description ? <Text className="text-xs text-slate-500 mt-1">{description}</Text> : null}
+const Section = ({ label, children, description = "" }: { label: string; children: React.ReactNode; description?: string }) => {
+  const theme = useThemeColors();
+  const sectionStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: {
+          marginBottom: theme.spacing[6],
+          paddingHorizontal: theme.spacing[6],
+        },
+        header: {
+          marginBottom: theme.spacing[2],
+        },
+        label: {
+          fontSize: 11,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.secondary,
+          textTransform: "capitalize",
+          letterSpacing: 1.5,
+        },
+        description: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+          marginTop: theme.spacing[1],
+        },
+        body: {
+          gap: theme.spacing[3],
+        },
+      }),
+    [theme],
+  );
+
+  return (
+    <View style={sectionStyles.wrap}>
+      <View style={sectionStyles.header}>
+        <Text style={sectionStyles.label}>{label}</Text>
+        {description ? <Text style={sectionStyles.description}>{description}</Text> : null}
+      </View>
+      <View style={sectionStyles.body}>{children}</View>
     </View>
-    <View className="gap-3">{children}</View>
-  </View>
-);
+  );
+};
 
 export default function CreateTournamentPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const cityInputRef = useRef<TextInput>(null);
-  const venueInputRef = useRef<TextInput>(null);
   /** Extra scroll padding on iOS only; Android uses KeyboardAvoidingView `padding` to avoid double inset with edge-to-edge / resize. */
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const {
+    city,
+    venue,
+    openCityPicker,
+    openVenuePicker,
+    cityLabel,
+    venueLabel,
+    venueSubtitle,
+  } = useLocationSelection();
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
@@ -301,6 +341,8 @@ export default function CreateTournamentPage() {
     resolver: zodResolver(tournamentSchema) as Resolver<TournamentFormValues>,
     defaultValues: {
       name: "",
+      cityId: "",
+      venueId: "",
       city: "",
       venue: "",
       format: "round_robin",
@@ -387,6 +429,20 @@ export default function CreateTournamentPage() {
     });
   };
 
+  useEffect(() => {
+    setValue("cityId", city?._id ?? "", { shouldValidate: Boolean(city) });
+    setValue("city", city?.name ?? "", { shouldValidate: false });
+    if (!city) {
+      setValue("venueId", "", { shouldValidate: false });
+      setValue("venue", "", { shouldValidate: false });
+    }
+  }, [city, setValue]);
+
+  useEffect(() => {
+    setValue("venueId", venue?._id ?? "", { shouldValidate: Boolean(venue) });
+    setValue("venue", venue?.name ?? "", { shouldValidate: false });
+  }, [venue, setValue]);
+
   const onSubmit = async (data: TournamentFormValues) => {
     setIsSubmitting(true);
     try {
@@ -398,9 +454,12 @@ export default function CreateTournamentPage() {
           ? { matchType: data.matchType ?? "singles" }
           : {}),
         startDate: data.startDate,
-        city: data.city,
-        venue: data.venue,
+        cityId: data.cityId,
+        venueId: data.venueId,
+        city: data.city || city?.name,
+        venue: data.venue || venue?.name,
         participants: data.participants,
+
         seedingMethod: "none",
         rules: {
           // For team tournaments, set setsPerMatch to match setsPerSubMatch for consistency
@@ -501,6 +560,150 @@ export default function CreateTournamentPage() {
     });
   };
 
+  const theme = useThemeColors();
+  const styles = useMemo(() => getCreateFlowChoiceStyles(theme), [theme]);
+  const pageStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: theme.colors.background.primary,
+        },
+        header: {
+          backgroundColor: theme.colors.background.primary,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        headerContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+          paddingHorizontal: theme.spacing[4],
+          height: 56,
+        },
+        backButton: {
+          padding: theme.spacing[2],
+          borderRadius: theme.borderRadius.sm,
+        },
+        headerTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        keyboardAvoidingView: {
+          flex: 1,
+        },
+        scrollContainer: {
+          flex: 1,
+        },
+        scrollContent: {
+          flexGrow: 1,
+        },
+        halfWidthField: {
+          flex: 1,
+        },
+      }),
+    [theme],
+  );
+  const formStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        header: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[3],
+        },
+        label: {
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.secondary,
+          marginBottom: theme.spacing[2],
+        },
+        chip: {
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[2],
+          borderRadius: 9999,
+          borderWidth: 2,
+        },
+        chipText: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+        datePickerButton: {
+          height: 58,
+          borderRadius: theme.borderRadius.sm,
+          paddingHorizontal: theme.spacing[4],
+          backgroundColor: theme.colors.background.primary,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+        datePickerText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.primary,
+        },
+        switchContainer: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: theme.spacing[6],
+          paddingVertical: theme.spacing[2],
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        matchSettingsHeader: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[3],
+        },
+        switchContainerCompact: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingVertical: theme.spacing[2],
+          paddingHorizontal: theme.spacing[6],
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        switchLabelText: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.secondary,
+        },
+        sectionBlock: {
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[3],
+        },
+        mutedText: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+        },
+        bodyText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.secondary,
+        },
+        submitButton: {
+          height: 48,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: theme.borderRadius.md,
+          backgroundColor: theme.colors.text.primary,
+        },
+        submitButtonDisabled: {
+          backgroundColor: theme.colors.gray[300],
+        },
+        submitButtonText: {
+          color: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+      }),
+    [theme],
+  );
+
   return (
     <SafeAreaView style={pageStyles.safeArea} edges={["top"]}>
       <KeyboardAvoidingView
@@ -515,7 +718,7 @@ export default function CreateTournamentPage() {
               onPress={() => router.back()}
               style={pageStyles.backButton}
             >
-              <Icon name="chevron-left" size={20} color="#0f172a" />
+              <Icon name="chevron-left" size={20} color={theme.colors.text.primary} />
             </Pressable>
             <Text style={pageStyles.headerTitle}>Create tournament</Text>
           </View>
@@ -531,7 +734,7 @@ export default function CreateTournamentPage() {
             pageStyles.scrollContent,
             {
               paddingBottom:
-                tokens.spacing[8] +
+                theme.spacing[8] +
                 (Platform.OS === "ios" ? keyboardInset : 0),
             },
           ]}
@@ -539,7 +742,7 @@ export default function CreateTournamentPage() {
 
           {/* Basic Information */}
           <View className="px-4 py-3">
-            <Text style={Styles.header}>Basic Information</Text>
+            <Text style={formStyles.header}>Basic Information</Text>
 
             {/* Tournament Name */}
             <View className="gap-4">
@@ -553,61 +756,42 @@ export default function CreateTournamentPage() {
                     onChangeText={onChange}
                     placeholder="Spring Championship 2025"
                     error={errors.name?.message}
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                    onSubmitEditing={() => cityInputRef.current?.focus()}
+                    returnKeyType="done"
+                    blurOnSubmit
                   />
                 )}
               />
 
-              <Controller
-                control={control}
-                name="city"
-                render={({ field: { onChange, value } }) => (
-                  <FormTextField
-                    ref={cityInputRef}
-                    label="City"
-                    containerStyle={pageStyles.halfWidthField}
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="City"
-                    error={errors.city?.message}
-                    returnKeyType="next"
-                    blurOnSubmit={false}
-                    onSubmitEditing={() => venueInputRef.current?.focus()}
-                  />
-                )}
+              <LocationSelectRow
+                label="City"
+                value={cityLabel}
+                placeholder="Search city…"
+                error={errors.cityId?.message}
+                onPress={openCityPicker}
               />
-              <Controller
-                control={control}
-                name="venue"
-                render={({ field: { onChange, value } }) => (
-                  <FormTextField
-                    ref={venueInputRef}
-                    label="Venue"
-                    containerStyle={pageStyles.halfWidthField}
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="Club / Arena"
-                    error={errors.venue?.message}
-                    returnKeyType="done"
-                  />
-                )}
+              <LocationSelectRow
+                label="Venue"
+                value={venueLabel}
+                subtitle={venueSubtitle}
+                placeholder={city ? "Search venue…" : "Select a city first"}
+                disabled={!city}
+                error={errors.venueId?.message}
+                onPress={openVenuePicker}
               />
 
               {/* Start Date */}
               <View>
-                <Text style={Styles.label}>Start date</Text>
+                <Text style={formStyles.label}>Start date</Text>
                 <Controller
                   control={control}
                   name="startDate"
                   render={({ field: { onChange, value } }) => (
                     <Pressable
                       onPress={() => setShowDatePicker(true)}
-                      style={Styles.datePickerButton}
+                      style={formStyles.datePickerButton}
                     >
-                      <Text style={Styles.datePickerText}>{format(value, "PPP")}</Text>
-                      <Icon name="calendar" size={16} color={tokens.colors.gray[500]} />
+                      <Text style={formStyles.datePickerText}>{format(value, "PPP")}</Text>
+                      <Icon name="calendar" size={16} color={theme.colors.text.tertiary} />
                     </Pressable>
                   )}
                 />
@@ -633,7 +817,7 @@ export default function CreateTournamentPage() {
           {/* Format Selector - Top Priority */}
           <View className="py-2 px-4">
             <View className="mb-3">
-              <Text style={Styles.header}>Tournament Format</Text>
+              <Text style={formStyles.header}>Tournament Format</Text>
             </View>
             <Controller
               control={control}
@@ -669,7 +853,7 @@ export default function CreateTournamentPage() {
 
           {/* Category */}
           <View className="px-4 py-3">
-            <Text style={Styles.header}>Category</Text>
+            <Text style={formStyles.header}>Category</Text>
             <Controller
               control={control}
               name="category"
@@ -703,7 +887,7 @@ export default function CreateTournamentPage() {
 
           {/* Match Settings */}
           <View className="px-4 py-3">
-            <Text style={Styles.matchSettingsHeader}>
+            <Text style={formStyles.matchSettingsHeader}>
               {watchCategory === "team" ? "Match format" : "Match format"}
             </Text>
             {watchCategory === "individual" ? (
@@ -938,7 +1122,7 @@ export default function CreateTournamentPage() {
                         }}
                         className="flex-row items-center gap-1 py-2"
                       >
-                        <Icon name="plus" size={16} color={tokens.colors.primary[600]} />
+                        <Icon name="plus" size={16} color={theme.colors.primary[600]} />
                         <Text className="text-sm text-primary-600 font-medium">
                           Add rubber
                         </Text>
@@ -966,7 +1150,7 @@ export default function CreateTournamentPage() {
                     render={({ field: { onChange, value } }) => (
                       <Pressable
                         onPress={() => onChange(!value)}
-                        style={Styles.switchContainer}
+                        style={formStyles.switchContainer}
                       >
                         <Text className="text-sm font-medium text-slate-700">3rd Place Match</Text>
                         <Switch
@@ -991,9 +1175,9 @@ export default function CreateTournamentPage() {
                       render={({ field: { onChange, value } }) => (
                         <Pressable
                           onPress={() => onChange(!value)}
-                          style={Styles.switchContainerCompact}
+                          style={formStyles.switchContainerCompact}
                         >
-                          <Text style={Styles.switchLabelText}>Use Groups</Text>
+                          <Text style={formStyles.switchLabelText}>Use Groups</Text>
                           <Switch
                             value={value}
                             onValueChange={onChange}
@@ -1065,9 +1249,9 @@ export default function CreateTournamentPage() {
                         render={({ field: { onChange, value } }) => (
                           <Pressable
                             onPress={() => onChange(!value)}
-                            style={Styles.switchContainer}
+                            style={formStyles.switchContainer}
                           >
-                            <Text style={Styles.switchLabelText}>3rd Place Match</Text>
+                            <Text style={formStyles.switchLabelText}>3rd Place Match</Text>
                             <Switch
                               value={value}
                               onValueChange={onChange}
@@ -1081,9 +1265,9 @@ export default function CreateTournamentPage() {
                         render={({ field: { onChange, value } }) => (
                           <Pressable
                             onPress={() => onChange(!value)}
-                            style={Styles.switchContainer}
+                            style={formStyles.switchContainer}
                           >
-                            <Text style={Styles.switchLabelText}>Custom Matching</Text>
+                            <Text style={formStyles.switchLabelText}>Custom Matching</Text>
                             <Switch
                               value={value}
                               onValueChange={onChange}
@@ -1154,17 +1338,19 @@ export default function CreateTournamentPage() {
           </View>
 
           {/* Submit Button */}
-          <View className="px-4 pt-4">
+          <View style={formStyles.sectionBlock}>
             <Pressable
               onPress={handleSubmit(onSubmit, onInvalid)}
               disabled={isSubmitting}
-              className={`h-12 items-center justify-center rounded-xl ${isSubmitting ? "bg-gray-300" : "bg-slate-900"
-                }`}
+              style={[
+                formStyles.submitButton,
+                isSubmitting && formStyles.submitButtonDisabled,
+              ]}
             >
               {isSubmitting ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={theme.colors.background.primary} />
               ) : (
-                <Text className="text-white text-sm font-medium">Create tournament</Text>
+                <Text style={formStyles.submitButtonText}>Create tournament</Text>
               )}
             </Pressable>
           </View>
@@ -1174,112 +1360,3 @@ export default function CreateTournamentPage() {
   );
 }
 
-const pageStyles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: tokens.colors.background.primary,
-  },
-  header: {
-    backgroundColor: tokens.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border.light,
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing[3],
-    paddingHorizontal: tokens.spacing[4],
-    height: 56,
-  },
-  backButton: {
-    padding: tokens.spacing[2],
-    borderRadius: tokens.borderRadius.sm,
-  },
-  headerTitle: {
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.semibold,
-    color: tokens.colors.gray[900],
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  halfWidthField: {
-    flex: 1,
-  },
-});
-
-const Styles = StyleSheet.create({
-  header: {
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.semibold,
-    color: tokens.colors.gray[900],
-    marginBottom: tokens.spacing[3],
-  },
-  label: {
-    fontSize: tokens.typography.fontSize.base,
-    color: tokens.colors.gray[600],
-    marginBottom: tokens.spacing[2],
-  },
-  chip: {
-    paddingHorizontal: tokens.spacing[4],
-    paddingVertical: tokens.spacing[2],
-    borderRadius: 9999,
-    borderWidth: 2,
-  },
-  chipText: {
-    fontSize: tokens.typography.fontSize.base,
-    fontWeight: tokens.typography.fontWeight.medium,
-  },
-  datePickerButton: {
-    height: 58,
-    borderRadius: tokens.borderRadius.sm,
-    paddingHorizontal: tokens.spacing[4],
-    backgroundColor: tokens.colors.background.primary,
-    borderWidth: 1,
-    borderColor: tokens.colors.gray[200],
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  datePickerText: {
-    fontSize: tokens.typography.fontSize.sm,
-    color: tokens.colors.gray[900],
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.spacing[6],
-    paddingVertical: tokens.spacing[2],
-    borderRadius: tokens.borderRadius.sm,
-    backgroundColor: tokens.colors.background.secondary,
-  },
-  // Match settings header
-  matchSettingsHeader: {
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.semibold,
-    color: tokens.colors.gray[900],
-    marginBottom: tokens.spacing[3],
-  },
-  // Switch container styles
-  switchContainerCompact: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: tokens.spacing[2],
-    paddingHorizontal: tokens.spacing[6],
-    borderRadius: tokens.borderRadius.sm,
-    backgroundColor: tokens.colors.background.secondary,
-  },
-  switchLabelText: {
-    fontSize: tokens.typography.fontSize.base,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: tokens.colors.text.secondary,
-  },
-});

@@ -7,6 +7,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { DesignTokens } from '@/constants/designTokens';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps {
@@ -20,6 +21,8 @@ interface ButtonProps {
   textStyle?: TextStyle;
   fullWidth?: boolean;
 }
+
+const BUTTON_RADIUS = DesignTokens.borderRadius.base;
 
 export const Button: React.FC<ButtonProps> = ({
   children,
@@ -52,12 +55,12 @@ export const Button: React.FC<ButtonProps> = ({
         onPress={onPress}
         disabled={isDisabled}
         className={cn(
-          'rounded-lg items-center justify-center overflow-hidden',
+          'items-center justify-center overflow-hidden',
           sizeClasses[size],
           fullWidth && 'w-full',
           isDisabled && 'opacity-50'
         )}
-        style={style}
+        style={[{ borderRadius: BUTTON_RADIUS, overflow: 'hidden' }, style]}
         activeOpacity={0.8}
       >
         <LinearGradient
@@ -65,6 +68,7 @@ export const Button: React.FC<ButtonProps> = ({
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           className={cn('w-full items-center justify-center', sizeClasses[size])}
+          style={{ borderRadius: BUTTON_RADIUS }}
         >
           {loading ? (
             <ActivityIndicator color="#fff" size="small" />
@@ -95,13 +99,13 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       disabled={isDisabled}
       className={cn(
-        'rounded-lg items-center justify-center',
+        'items-center justify-center',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth && 'w-full',
         isDisabled && 'opacity-50'
       )}
-      style={style}
+      style={[{ borderRadius: BUTTON_RADIUS }, style]}
       activeOpacity={0.7}
     >
       {loading ? (

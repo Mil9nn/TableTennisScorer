@@ -1,119 +1,132 @@
-import React from "react";
-import { View, Pressable, StyleSheet } from "react-native";
+import React, { useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
+
+const ROW_COUNT = 8;
+const AVATAR_SIZE = 40;
+
+function SinglesMatchRowSkeleton() {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        row: {
+          gap: theme.spacing[3],
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[4],
+        },
+        matchContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+        },
+        playerSection: {
+          flex: 1,
+          minWidth: 0,
+        },
+        playerSectionRight: {
+          alignItems: "flex-end",
+        },
+        playerInfo: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+        playerInfoRight: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-end",
+        },
+        scoreContainer: {
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: 72,
+        },
+        metaStack: {
+          gap: theme.spacing[2],
+        },
+        metaRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+      }),
+    [theme],
+  );
+
+  return (
+    <View style={styles.row}>
+      <View style={styles.matchContent}>
+        <View style={styles.playerSection}>
+          <View style={styles.playerInfo}>
+            <Skeleton
+              muted
+              width={AVATAR_SIZE}
+              height={AVATAR_SIZE}
+              borderRadius={AVATAR_SIZE / 2}
+            />
+            <Skeleton muted width={88} height={13} borderRadius={theme.borderRadius.sm} />
+          </View>
+        </View>
+
+        <View style={styles.scoreContainer}>
+          <Skeleton muted width={44} height={18} borderRadius={theme.borderRadius.sm} />
+        </View>
+
+        <View style={[styles.playerSection, styles.playerSectionRight]}>
+          <View style={styles.playerInfoRight}>
+            <Skeleton muted width={88} height={13} borderRadius={theme.borderRadius.sm} />
+            <Skeleton
+              muted
+              width={AVATAR_SIZE}
+              height={AVATAR_SIZE}
+              borderRadius={AVATAR_SIZE / 2}
+            />
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.metaStack}>
+        <Skeleton muted width={120} height={12} borderRadius={theme.borderRadius.sm} />
+        <View style={styles.metaRow}>
+          <Skeleton muted width={58} height={10} borderRadius={theme.borderRadius.sm} />
+          <Skeleton muted width={48} height={10} borderRadius={theme.borderRadius.sm} />
+          <Skeleton muted width={72} height={10} borderRadius={theme.borderRadius.sm} />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function MatchesListSkeleton() {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        listFrame: {
+          flex: 1,
+          width: "100%",
+          backgroundColor: theme.colors.background.tertiary,
+        },
+        cardContainer: {
+          backgroundColor: theme.colors.background.primary,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: theme.colors.border.light,
+        },
+      }),
+    [theme],
+  );
+
   return (
-    <View style={styles.container}>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <View key={i} style={styles.cardContainer}>
-          <View style={styles.card}>
-            {/* Header: Format & Status */}
-            <View style={styles.cardHeader}>
-              <Skeleton width={80} height={16} borderRadius={DesignTokens.borderRadius.sm} />
-              <Skeleton width={60} height={16} borderRadius={DesignTokens.borderRadius.sm} />
-            </View>
-
-            {/* Match Content: Players & Score */}
-            <View style={styles.matchContent}>
-              {/* Side 1: Avatar + Name */}
-              <View style={styles.playerSection}>
-                <View style={styles.playerInfo}>
-                  <View style={styles.avatarContainer}>
-                    <Skeleton width={32} height={32} borderRadius={16} />
-                  </View>
-                  <Skeleton width={100} height={16} borderRadius={DesignTokens.borderRadius.sm} />
-                </View>
-              </View>
-
-              {/* Score */}
-              <View style={styles.scoreContainer}>
-                <Skeleton width={50} height={20} borderRadius={DesignTokens.borderRadius.sm} />
-              </View>
-
-              {/* Side 2: Name + Avatar */}
-              <View style={[styles.playerSection, styles.playerSectionRight]}>
-                <View style={[styles.playerInfo, styles.playerInfoRight]}>
-                  <Skeleton width={100} height={16} borderRadius={DesignTokens.borderRadius.sm} />
-                  <View style={styles.avatarContainer}>
-                    <Skeleton width={32} height={32} borderRadius={16} />
-                  </View>
-                </View>
-              </View>
-            </View>
-
-
-            <View style={styles.metaRow}>
-              <Skeleton width={70} height={12} borderRadius={DesignTokens.borderRadius.sm} />
-              <Skeleton width={50} height={12} borderRadius={DesignTokens.borderRadius.sm} />
-              <Skeleton width={60} height={12} borderRadius={DesignTokens.borderRadius.sm} />
-            </View>
-          </View>
+    <View style={styles.listFrame}>
+      {Array.from({ length: ROW_COUNT }).map((_, index) => (
+        <View key={index} style={styles.cardContainer}>
+          <SinglesMatchRowSkeleton />
         </View>
       ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: DesignTokens.colors.background.tertiary,
-  },
-  cardContainer: {
-    marginBottom: DesignTokens.spacing[1],
-  },
-  card: {
-    backgroundColor: DesignTokens.colors.background.primary,
-    padding: DesignTokens.spacing[5],
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: DesignTokens.spacing[4],
-  },
-  matchContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: DesignTokens.spacing[4],
-    gap: DesignTokens.spacing[4],
-  },
-  playerSection: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  playerSectionRight: {
-    alignItems: 'flex-end',
-  },
-  playerInfo: {
-    alignItems: 'flex-start',
-    gap: DesignTokens.spacing[2],
-  },
-  playerInfoRight: {
-    alignItems: 'flex-end',
-  },
-  avatarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarOverlap: {
-    marginLeft: -DesignTokens.spacing[2],
-  },
-  avatarOverlapRight: {
-    marginRight: -DesignTokens.spacing[2],
-  },
-  scoreContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 60,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: DesignTokens.spacing[2],
-  },
-});
-

@@ -1,7 +1,7 @@
 import { axiosInstance } from "@/lib/axiosInstance";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Pressable,
@@ -9,14 +9,14 @@ import {
   View,
   ActivityIndicator,
   Alert,
-  TextInput,
   StyleSheet,
 } from "react-native";
 import * as z from "zod";
-import { FormTextField } from "@/components/ui/FormTextField";
+import { LocationSelectRow } from "@/components/location/LocationSelectRow";
 import UserSearchInput from "./UserSearchInput";
-import { createFlowChoiceStyles } from "@/styles/createFlowChoiceStyles";
-import { DesignTokens } from "@/constants/designTokens";
+import { getCreateFlowChoiceStyles } from "@/styles/createFlowChoiceStyles";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useLocationSelection } from "@/hooks/useLocationSelection";
 
 const userSchema = z.object({
   _id: z.string(),
@@ -33,7 +33,9 @@ const schema = z
     player2: userSchema.optional(),
     player3: userSchema.optional(),
     player4: userSchema.optional(),
-    city: z.string().min(1, "City is required"),
+    cityId: z.string().min(1, "Select a city"),
+    venueId: z.string().optional(),
+    city: z.string().optional(),
     venue: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -62,9 +64,92 @@ const matchTypeOptions = [
 ];
 
 export default function IndividualMatchForm({ endpoint }: Props) {
+  const theme = useThemeColors();
+  const createFlowChoiceStyles = useMemo(
+    () => getCreateFlowChoiceStyles(theme),
+    [theme],
+  );
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          paddingHorizontal: theme.spacing[4],
+          paddingBottom: theme.spacing[8],
+        },
+        section: {
+          paddingVertical: theme.spacing[3],
+        },
+        sectionTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[3],
+        },
+        sectionSubtitle: {
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.secondary,
+          marginBottom: theme.spacing[4],
+        },
+        errorText: {
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.error,
+        },
+        singlesPlayerList: {
+          gap: theme.spacing[8],
+        },
+        doublesContainer: {
+          gap: theme.spacing[4],
+        },
+        doublesTeamCard: {
+          backgroundColor: theme.colors.background.secondary,
+          padding: theme.spacing[3],
+        },
+        doublesTeamLabel: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.secondary,
+          marginBottom: theme.spacing[3],
+        },
+        doublesPlayerList: {
+          gap: theme.spacing[3],
+        },
+        locationFields: {
+          gap: theme.spacing[3],
+        },
+        submitWrapper: {
+          paddingBottom: theme.spacing[2],
+          paddingTop: theme.spacing[4],
+        },
+        submitButton: {
+          height: 48,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: theme.colors.text.primary,
+        },
+        submitButtonDisabled: {
+          backgroundColor: theme.colors.gray[300],
+        },
+        submitButtonText: {
+          color: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+      }),
+    [theme],
+  );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const venueInputRef = useRef<TextInput>(null);
   const router = useRouter();
+  const {
+    city,
+    venue,
+    openCityPicker,
+    openVenuePicker,
+    cityLabel,
+    venueLabel,
+    venueSubtitle,
+  } = useLocationSelection();
 
   const {
     control,
@@ -74,10 +159,31 @@ export default function IndividualMatchForm({ endpoint }: Props) {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { matchType: "singles", numberOfSets: "3", city: "", venue: "" },
+    defaultValues: {
+      matchType: "singles",
+      numberOfSets: "3",
+      cityId: "",
+      venueId: "",
+      city: "",
+      venue: "",
+    },
   });
 
   const matchType = watch("matchType");
+
+  useEffect(() => {
+    setValue("cityId", city?._id ?? "", { shouldValidate: Boolean(city) });
+    setValue("city", city?.name ?? "");
+    if (!city) {
+      setValue("venueId", "");
+      setValue("venue", "");
+    }
+  }, [city, setValue]);
+
+  useEffect(() => {
+    setValue("venueId", venue?._id ?? "");
+    setValue("venue", venue?.name ?? "");
+  }, [venue, setValue]);
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -85,8 +191,10 @@ export default function IndividualMatchForm({ endpoint }: Props) {
       const payload = {
         matchType: data.matchType,
         numberOfSets: Number(data.numberOfSets),
-        city: data.city,
-        venue: data.venue || data.city,
+        cityId: data.cityId,
+        venueId: data.venueId || undefined,
+        city: data.city || city?.name,
+        venue: data.venue || venue?.name || undefined,
         participants:
           data.matchType === "singles"
             ? [data.player1!._id, data.player2!._id]
@@ -229,35 +337,20 @@ export default function IndividualMatchForm({ endpoint }: Props) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Location</Text>
         <View style={styles.locationFields}>
-          <Controller
-            control={control}
-            name="city"
-            render={({ field: { onChange, value } }) => (
-              <FormTextField
-                label="City"
-                value={value}
-                onChangeText={onChange}
-                placeholder="City"
-                error={errors.city?.message}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onSubmitEditing={() => venueInputRef.current?.focus()}
-              />
-            )}
+          <LocationSelectRow
+            label="City"
+            value={cityLabel}
+            placeholder="Search city…"
+            error={errors.cityId?.message}
+            onPress={openCityPicker}
           />
-          <Controller
-            control={control}
-            name="venue"
-            render={({ field: { onChange, value } }) => (
-              <FormTextField
-                ref={venueInputRef}
-                label="Venue"
-                value={value}
-                onChangeText={onChange}
-                placeholder="Club / Arena"
-                returnKeyType="done"
-              />
-            )}
+          <LocationSelectRow
+            label="Venue (optional)"
+            value={venueLabel}
+            subtitle={venueSubtitle}
+            placeholder={city ? "Search venue…" : "Select a city first"}
+            disabled={!city}
+            onPress={openVenuePicker}
           />
         </View>
       </View>
@@ -279,69 +372,3 @@ export default function IndividualMatchForm({ endpoint }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: DesignTokens.spacing[4],
-    paddingBottom: DesignTokens.spacing[8],
-  },
-  section: {
-    paddingVertical: DesignTokens.spacing[3],
-  },
-  sectionTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.primary,
-    marginBottom: DesignTokens.spacing[3],
-  },
-  sectionSubtitle: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.secondary,
-    marginBottom: DesignTokens.spacing[4],
-  },
-  errorText: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.error,
-  },
-  singlesPlayerList: {
-    gap: DesignTokens.spacing[8],
-  },
-  doublesContainer: {
-    gap: DesignTokens.spacing[4],
-  },
-  doublesTeamCard: {
-    backgroundColor: DesignTokens.colors.background.secondary,
-    padding: DesignTokens.spacing[3],
-  },
-  doublesTeamLabel: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.secondary,
-    marginBottom: DesignTokens.spacing[3],
-  },
-  doublesPlayerList: {
-    gap: DesignTokens.spacing[3],
-  },
-  locationFields: {
-    gap: DesignTokens.spacing[3],
-  },
-  submitWrapper: {
-    paddingBottom: DesignTokens.spacing[2],
-    paddingTop: DesignTokens.spacing[4],
-  },
-  submitButton: {
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: DesignTokens.borderRadius.sm,
-    backgroundColor: DesignTokens.colors.text.primary,
-  },
-  submitButtonDisabled: {
-    backgroundColor: DesignTokens.colors.gray[300],
-  },
-  submitButtonText: {
-    color: DesignTokens.colors.background.primary,
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.medium,
-  },
-});

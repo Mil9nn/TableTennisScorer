@@ -72,6 +72,36 @@ export type PlayerStatsResponse =
   | (ApiSuccess & { data: any })
   | ApiFailure;
 
+export type ProfileOverviewResponse =
+  | (ApiSuccess & {
+      data: {
+        career: {
+          wins: number;
+          losses: number;
+          totalMatches: number;
+          winRate: number;
+          currentWinStreak: number;
+          bestWinStreak: number;
+          serveAccuracy: number;
+          avgPointsPerMatch: number;
+          totalPointsScored: number;
+          totalPointsConceded: number;
+          setsWon: number;
+          setsLost: number;
+        };
+        recentForm: Array<"win" | "loss">;
+        counts: {
+          teams: number;
+          tournamentsPlayed: number;
+          tournamentsWon: number;
+          runnerUpCount: number;
+        };
+        flags: { hasShots: boolean };
+        bestFinishLabel: string | null;
+      };
+    })
+  | ApiFailure;
+
 export type TeamsResponse =
   | (ApiSuccess & {
       teams: Array<{

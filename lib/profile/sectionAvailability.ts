@@ -1,18 +1,3 @@
-export function hasInsightsData(data: unknown): boolean {
-  if (!data || typeof data !== "object") return false;
-
-  const graphs = (data as { graphs?: { matchPoints?: unknown[]; serveAccuracy?: unknown[] } })
-    .graphs;
-
-  const matchPoints = graphs?.matchPoints;
-  const serveAccuracy = graphs?.serveAccuracy;
-
-  return (
-    (Array.isArray(matchPoints) && matchPoints.length > 0) ||
-    (Array.isArray(serveAccuracy) && serveAccuracy.length > 0)
-  );
-}
-
 export function hasShotsData(data: unknown): boolean {
   if (!data || typeof data !== "object") return false;
 

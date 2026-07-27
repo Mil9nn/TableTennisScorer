@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.ttproapp",
-      "versionCode": 23,
+      "versionCode": 26,
       "adaptiveIcon": {
         "foregroundImage": "./assets/web-app-manifest-512x512.png",
         "backgroundColor": "#EEF2FF"

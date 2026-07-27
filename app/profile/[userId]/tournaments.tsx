@@ -133,34 +133,33 @@ export default function ProfileTournamentsScreen() {
         <Text style={styles.emptyText}>No tournament stats available.</Text>
       ) : (
         <>
-          <View style={styles.overviewGrid}>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>{tournamentsPlayed}</Text>
-              <Text style={styles.overviewLabel}>Played</Text>
-            </View>
-            <View style={[styles.overviewCard, styles.overviewCardHighlight]}>
-              <Text style={[styles.overviewValue, styles.overviewValueHighlight]}>
+          <View style={styles.overviewBar}>
+            <Text style={styles.overviewStat}>
+              <Text style={styles.overviewStatValue}>{tournamentsPlayed}</Text>
+              {" played"}
+            </Text>
+            <Text style={styles.overviewDivider}>·</Text>
+            <Text style={styles.overviewStat}>
+              <Text style={[styles.overviewStatValue, styles.overviewStatWin]}>
                 {tournamentsWon}
               </Text>
-              <Text style={styles.overviewLabel}>Won</Text>
-            </View>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>
+              {" won"}
+            </Text>
+            <Text style={styles.overviewDivider}>·</Text>
+            <Text style={styles.overviewStat}>
+              <Text style={[styles.overviewStatValue, styles.overviewStatPodium]}>
                 {Number(overview?.podiumFinishes ?? 0)}
               </Text>
-              <Text style={styles.overviewLabel}>Podiums</Text>
-            </View>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>
+              {" podiums"}
+            </Text>
+            <Text style={styles.overviewDivider}>·</Text>
+            <Text style={styles.overviewStat}>
+              <Text style={styles.overviewStatValue}>
                 {Number(overview?.totalMatches ?? 0)}
               </Text>
-              <Text style={styles.overviewLabel}>Matches</Text>
-            </View>
+              {" matches"}
+            </Text>
           </View>
-
-          <Text style={styles.sectionTitle}>
-            Tournament history ({tournaments.length})
-          </Text>
 
           {tournaments.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -292,45 +291,31 @@ const styles = StyleSheet.create({
     color: DesignTokens.colors.text.tertiary,
     textAlign: "center",
   },
-  overviewGrid: {
+  overviewBar: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: DesignTokens.spacing[2],
-  },
-  overviewCard: {
-    flexGrow: 1,
-    flexBasis: "47%",
-    backgroundColor: DesignTokens.colors.background.primary,
-    borderRadius: DesignTokens.borderRadius.sm,
-    padding: DesignTokens.spacing[4],
-    borderWidth: 1,
-    borderColor: DesignTokens.colors.border.light,
     alignItems: "center",
+    gap: DesignTokens.spacing[2],
+    paddingVertical: DesignTokens.spacing[2],
+    paddingHorizontal: DesignTokens.spacing[1],
   },
-  overviewCardHighlight: {
-    borderColor: "#fcd34d",
-    backgroundColor: "#fffbeb",
-  },
-  overviewValue: {
-    fontSize: DesignTokens.typography.fontSize["2xl"],
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    color: DesignTokens.colors.text.primary,
-  },
-  overviewValueHighlight: {
-    color: "#b45309",
-  },
-  overviewLabel: {
-    marginTop: DesignTokens.spacing[1],
-    fontSize: DesignTokens.typography.fontSize.xs,
+  overviewStat: {
+    fontSize: DesignTokens.typography.fontSize.sm,
     color: DesignTokens.colors.text.tertiary,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
   },
-  sectionTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
+  overviewStatValue: {
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.text.secondary,
-    marginTop: DesignTokens.spacing[2],
+  },
+  overviewStatWin: {
+    color: DesignTokens.colors.background.buttons.darkYellow,
+  },
+  overviewStatPodium: {
+    color: DesignTokens.colors.status.ready,
+  },
+  overviewDivider: {
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.text.tertiary,
   },
   emptyCard: {
     alignItems: "center",

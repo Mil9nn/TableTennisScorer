@@ -4,26 +4,21 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  Pressable,
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { PlayerLeaderboard } from "@/components/leaderboard/PlayerLeaderboard";
 import { TeamLeaderboard } from "@/components/leaderboard/TeamLeaderboard";
+import { LeaderboardQuickFilters } from "@/components/leaderboard/LeaderboardQuickFilters";
 import { TournamentTabView, TabRoute } from "@/components/ui/TournamentTabView";
-import { ChoiceChip } from "@/components/ui/ChoiceChip";
-import { DesignTokens } from "@/constants/designTokens";
-
-const SEARCH_ICON_COLOR = DesignTokens.colors.info;
+import { UnifiedSearchBar } from "@/components/ui/UnifiedSearchBar";
+import { useLeaderboardFilters } from "@/hooks/useFilters";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 type IndividualLeaderboardEntry = {
   rank: number;
@@ -60,17 +55,6 @@ type TeamLeaderboardEntry = {
   };
 };
 
-type MatchTypeFilter = "all" | "singles" | "doubles";
-type GenderFilter = "" | "male" | "female";
-type HandFilter = "" | "right" | "left";
-type FormatFilter = "" | "friendly" | "tournament";
-
-interface LeaderboardFilters {
-  matchType: MatchTypeFilter;
-  gender: GenderFilter;
-  hand: HandFilter;
-  format: FormatFilter;
-}
 const PAGE_SIZE = 20;
 
 const LEADERBOARD_TAB_ROUTES: TabRoute[] = [
@@ -78,17 +62,14 @@ const LEADERBOARD_TAB_ROUTES: TabRoute[] = [
   { key: "team", title: "Team" },
 ];
 
-export default function LeaderboardPage() {
+export function LeaderboardView({ showBack = true }: { showBack?: boolean }) {
   const router = useRouter();
+  const theme = useThemeColors();
   const [tabIndex, setTabIndex] = useState(0);
   const activeTab = LEADERBOARD_TAB_ROUTES[tabIndex].key as "individual" | "team";
-  const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<LeaderboardFilters>({
-    matchType: "all",
-    gender: "",
-    hand: "",
-    format: "",
-  });
+
+  const individualFilters = useLeaderboardFilters(300);
+
   const [individualLeaderboard, setIndividualLeaderboard] = useState<IndividualLeaderboardEntry[]>([]);
   const [teamLeaderboard, setTeamLeaderboard] = useState<TeamLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -98,16 +79,46 @@ export default function LeaderboardPage() {
   const [teamHasMore, setTeamHasMore] = useState(true);
   const [individualSkip, setIndividualSkip] = useState(0);
   const [teamSkip, setTeamSkip] = useState(0);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
 
   const currentHasMore = activeTab === "individual" ? individualHasMore : teamHasMore;
 
-  useEffect(() => {
-    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }, []);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: theme.colors.background.primary,
+        },
+        headerContainer: {
+          padding: theme.spacing[4],
+          backgroundColor: theme.colors.background.primary,
+        },
+        titleRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: theme.spacing[4],
+        },
+        backBtn: {
+          marginRight: theme.spacing[3],
+          padding: theme.spacing[2],
+          marginLeft: -theme.spacing[2],
+        },
+        screenTitle: {
+          fontSize: theme.typography.fontSize["2xl"],
+          fontWeight: theme.typography.fontWeight.bold,
+          letterSpacing: theme.typography.letterSpacing.tight,
+          color: theme.colors.text.primary,
+        },
+        searchRow: {
+          marginBottom: theme.spacing[2],
+        },
+        tabViewWrapper: {
+          flex: 1,
+          backgroundColor: theme.colors.background.tertiary,
+        },
+      }),
+    [theme],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -118,14 +129,11 @@ export default function LeaderboardPage() {
 
       try {
         if (activeTab === "individual") {
-          const params = new URLSearchParams();
-          params.set("limit", String(PAGE_SIZE));
-          params.set("skip", "0");
-          if (filters.matchType !== "all") params.set("type", filters.matchType);
-          if (filters.format) params.set("matchFormat", filters.format);
-          if (filters.gender) params.set("gender", filters.gender);
-          if (filters.hand) params.set("handedness", filters.hand);
-          const url = `/leaderboard/filtered${params.toString() ? `?${params.toString()}` : ""}`;
+          const params = individualFilters.buildQueryParams({
+            limit: PAGE_SIZE,
+            skip: 0,
+          });
+          const url = `/leaderboard/filtered?${params.toString()}`;
           const response = await axiosInstance.get(url);
           const leaderboard = Array.isArray(response.data?.leaderboard) ? response.data.leaderboard : [];
           const hasMore = Boolean(response.data?.pagination?.hasMore);
@@ -158,7 +166,16 @@ export default function LeaderboardPage() {
     return () => {
       mounted = false;
     };
-  }, [activeTab, filters]);
+  }, [
+    activeTab,
+    individualFilters.filters.type,
+    individualFilters.filters.matchFormat,
+    individualFilters.filters.gender,
+    individualFilters.filters.handedness,
+    individualFilters.filters.dateFrom,
+    individualFilters.filters.dateTo,
+    individualFilters.buildQueryParams,
+  ]);
 
   const fetchMore = useCallback(async () => {
     if (loading || loadingMore || !currentHasMore) return;
@@ -167,13 +184,10 @@ export default function LeaderboardPage() {
     setError(null);
     try {
       if (activeTab === "individual") {
-        const params = new URLSearchParams();
-        params.set("limit", String(PAGE_SIZE));
-        params.set("skip", String(individualSkip));
-        if (filters.matchType !== "all") params.set("type", filters.matchType);
-        if (filters.format) params.set("matchFormat", filters.format);
-        if (filters.gender) params.set("gender", filters.gender);
-        if (filters.hand) params.set("handedness", filters.hand);
+        const params = individualFilters.buildQueryParams({
+          limit: PAGE_SIZE,
+          skip: individualSkip,
+        });
         const url = `/leaderboard/filtered?${params.toString()}`;
         const response = await axiosInstance.get(url);
         const nextRows = Array.isArray(response.data?.leaderboard) ? response.data.leaderboard : [];
@@ -200,81 +214,49 @@ export default function LeaderboardPage() {
   }, [
     activeTab,
     currentHasMore,
-    filters.format,
-    filters.gender,
-    filters.hand,
-    filters.matchType,
+    individualFilters,
     individualSkip,
     loading,
     loadingMore,
     teamSkip,
   ]);
 
+  const searchQuery = individualFilters.debouncedSearch;
+
   const visibleIndividualLeaderboard = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = searchQuery.trim().toLowerCase();
     const source = individualLeaderboard;
     if (!normalized) return source;
     return source.filter((entry) => {
       const name = (entry.player.fullName || entry.player.username || "").toLowerCase();
       return name.includes(normalized);
     });
-  }, [individualLeaderboard, query]);
+  }, [individualLeaderboard, searchQuery]);
 
   const visibleTeamLeaderboard = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = searchQuery.trim().toLowerCase();
     const source = teamLeaderboard;
     if (!normalized) return source;
     return source.filter((entry) => entry.team.name.toLowerCase().includes(normalized));
-  }, [teamLeaderboard, query]);
-
-  const setFilter = <K extends keyof LeaderboardFilters>(
-    key: K,
-    value: LeaderboardFilters[K]
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const toggleFilterChipsSection = useCallback(() => {
-    LayoutAnimation.configureNext({
-      duration: DesignTokens.animation.duration.normal,
-      create: {
-        type: LayoutAnimation.Types.easeInEaseOut,
-        property: LayoutAnimation.Properties.opacity,
-      },
-    });
-    setFiltersExpanded((v) => !v);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
-
-  const hasQuickFiltersActive = useMemo(
-    () =>
-      filters.matchType !== "all" ||
-      Boolean(filters.format) ||
-      Boolean(filters.gender) ||
-      Boolean(filters.hand),
-    [filters.matchType, filters.format, filters.gender, filters.hand]
-  );
-
-  const clearQuickFilters = useCallback(() => {
-    setFilters({
-      matchType: "all",
-      gender: "",
-      hand: "",
-      format: "",
-    });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, []);
+  }, [teamLeaderboard, searchQuery]);
 
   const handleTabIndexChange = useCallback((index: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setTabIndex(index);
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "team") {
-      setFiltersExpanded(false);
-    }
-  }, [activeTab]);
+  const quickFilterValues = useMemo(
+    () => ({
+      type: individualFilters.filters.type,
+      matchFormat: individualFilters.filters.matchFormat,
+      gender: individualFilters.filters.gender,
+      handedness: individualFilters.filters.handedness,
+      datePreset: individualFilters.filters.datePreset,
+      dateFrom: individualFilters.filters.dateFrom,
+      dateTo: individualFilters.filters.dateTo,
+    }),
+    [individualFilters.filters],
+  );
 
   const renderScene = useCallback(
     ({ route }: { route: TabRoute }) => {
@@ -284,7 +266,7 @@ export default function LeaderboardPage() {
         route.key === "individual" ? visibleIndividualLeaderboard : visibleTeamLeaderboard;
 
       return (
-        <View style={{ flex: 1, backgroundColor: "#f1f5f9" }}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background.tertiary }}>
           <ScrollView
             className="flex-1"
             showsVerticalScrollIndicator={false}
@@ -392,245 +374,44 @@ export default function LeaderboardPage() {
       loading,
       loadingMore,
       teamHasMore,
+      theme.colors.background.tertiary,
       visibleIndividualLeaderboard,
       visibleTeamLeaderboard,
     ]
   );
 
-  const renderIndividualFilters = () => (
-    <View
-      style={[styles.filterChipsSection, !filtersExpanded && styles.filterChipsSectionCollapsed]}
-    >
-      <View style={[styles.filterChipsBar, filtersExpanded && styles.filterChipsBarExpanded]}>
-        <Pressable
-          style={styles.filterChipsBarLeftPress}
-          onPress={toggleFilterChipsSection}
-          accessibilityRole="button"
-          accessibilityLabel={filtersExpanded ? "Hide filters" : "Show filters"}
-        >
-          <View style={styles.filterChipsBarLeft}>
-            <Text style={styles.filterChipsBarTitle}>Filters</Text>
-            {hasQuickFiltersActive ? <View style={styles.filterActivePill} /> : null}
-          </View>
-        </Pressable>
-        <View style={styles.filterChipsBarActions}>
-          {hasQuickFiltersActive ? (
-            <TouchableOpacity
-              onPress={clearQuickFilters}
-              activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-              style={styles.filterClearBtn}
-            >
-              <Text style={styles.filterClearBtnText}>Clear</Text>
-            </TouchableOpacity>
-          ) : null}
-          <Pressable
-            onPress={toggleFilterChipsSection}
-            style={styles.filterChipsChevronHit}
-            hitSlop={{ top: 10, bottom: 10, left: 8, right: 4 }}
-          >
-            <Ionicons
-              name={filtersExpanded ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={DesignTokens.colors.text.secondary}
-            />
-          </Pressable>
-        </View>
-      </View>
-
-      {filtersExpanded ? (
-        <>
-          <View style={styles.filterLabeledRow}>
-            <Text style={styles.filterRowLabel} numberOfLines={2}>
-              Match type
-            </Text>
-            <View style={styles.filterRowChipsWrap}>
-              {(
-                [
-                  { label: "All", value: "all" as const },
-                  { label: "Singles", value: "singles" as const },
-                  { label: "Doubles", value: "doubles" as const },
-                ] as const
-              ).map((chip) => {
-                const isSelected = filters.matchType === chip.value;
-                return (
-                  <ChoiceChip
-                    key={`lb-match-${chip.label}`}
-                    selected={isSelected}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (chip.value === "all") {
-                        setFilter("matchType", "all");
-                      } else {
-                        setFilter("matchType", isSelected ? "all" : chip.value);
-                      }
-                    }}
-                  >
-                    {chip.label}
-                  </ChoiceChip>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.filterLabeledRow}>
-            <Text style={styles.filterRowLabel} numberOfLines={2}>
-              Format
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filterRowScroll}
-              contentContainerStyle={styles.filterRowScrollContent}
-            >
-              {(
-                [
-                  { label: "All", value: "" as const },
-                  { label: "Friendly", value: "friendly" as const },
-                  { label: "Tournament", value: "tournament" as const },
-                ] as const
-              ).map((chip) => {
-                const isSelected = filters.format === chip.value;
-                return (
-                  <ChoiceChip
-                    key={`lb-format-${chip.label}`}
-                    selected={isSelected}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (chip.value === "") {
-                        setFilter("format", "");
-                      } else {
-                        setFilter("format", isSelected ? "" : chip.value);
-                      }
-                    }}
-                  >
-                    {chip.label}
-                  </ChoiceChip>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          <View style={styles.filterLabeledRow}>
-            <Text style={styles.filterRowLabel} numberOfLines={2}>
-              Gender
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filterRowScroll}
-              contentContainerStyle={styles.filterRowScrollContent}
-            >
-              {(
-                [
-                  { label: "All", value: "" as const },
-                  { label: "Male", value: "male" as const },
-                  { label: "Female", value: "female" as const },
-                ] as const
-              ).map((chip) => {
-                const isSelected = filters.gender === chip.value;
-                return (
-                  <ChoiceChip
-                    key={`lb-gender-${chip.label}`}
-                    selected={isSelected}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (chip.value === "") {
-                        setFilter("gender", "");
-                      } else {
-                        setFilter("gender", isSelected ? "" : chip.value);
-                      }
-                    }}
-                  >
-                    {chip.label}
-                  </ChoiceChip>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          <View style={styles.filterLabeledRow}>
-            <Text style={styles.filterRowLabel} numberOfLines={2}>
-              Hand
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filterRowScroll}
-              contentContainerStyle={styles.filterRowScrollContent}
-            >
-              {(
-                [
-                  { label: "All", value: "" as const },
-                  { label: "Right", value: "right" as const },
-                  { label: "Left", value: "left" as const },
-                ] as const
-              ).map((chip) => {
-                const isSelected = filters.hand === chip.value;
-                return (
-                  <ChoiceChip
-                    key={`lb-hand-${chip.label}`}
-                    selected={isSelected}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (chip.value === "") {
-                        setFilter("hand", "");
-                      } else {
-                        setFilter("hand", isSelected ? "" : chip.value);
-                      }
-                    }}
-                  >
-                    {chip.label}
-                  </ChoiceChip>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </>
-      ) : null}
-    </View>
-  );
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={styles.safeArea} edges={showBack ? ["top"] : []}>
+      {showBack ? <StatusBar style="dark" /> : null}
 
       <View style={styles.headerContainer}>
         <View style={styles.titleRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-          >
-            <Feather name="chevron-left" size={20} color={DesignTokens.colors.text.primary} />
-          </TouchableOpacity>
+          {showBack ? (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backBtn}
+              activeOpacity={0.7}
+            >
+              <Feather name="chevron-left" size={20} color={theme.colors.text.primary} />
+            </TouchableOpacity>
+          ) : null}
           <Text style={styles.screenTitle}>Leaderboards</Text>
         </View>
 
         <View style={styles.searchRow}>
-          <View style={styles.searchInputContainer}>
-            <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
-              <Ionicons
-                name="search-outline"
-                size={20}
-                color={SEARCH_ICON_COLOR}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                placeholder={activeTab === "individual" ? "Search players..." : "Search teams..."}
-                placeholderTextColor={DesignTokens.colors.text.tertiary}
-                value={query}
-                onChangeText={setQuery}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                style={styles.searchBarInput}
-                selectionColor={DesignTokens.colors.primary[600]}
-              />
-            </View>
-          </View>
+          <UnifiedSearchBar
+            placeholder={activeTab === "individual" ? "Search players..." : "Search teams..."}
+            value={individualFilters.filters.search}
+            onChangeText={(text) => individualFilters.setFilter("search", text)}
+          />
         </View>
 
-        {activeTab === "individual" ? renderIndividualFilters() : null}
+        {activeTab === "individual" ? (
+          <LeaderboardQuickFilters
+            filters={quickFilterValues}
+            onFiltersChange={(updates) => individualFilters.setFilters(updates)}
+          />
+        ) : null}
       </View>
 
       <View style={styles.tabViewWrapper}>
@@ -647,167 +428,6 @@ export default function LeaderboardPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: DesignTokens.colors.background.primary,
-  },
-  headerContainer: {
-    padding: DesignTokens.spacing[4],
-    backgroundColor: DesignTokens.colors.background.primary,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: DesignTokens.spacing[4],
-  },
-  backBtn: {
-    marginRight: DesignTokens.spacing[3],
-    padding: DesignTokens.spacing[2],
-    marginLeft: -DesignTokens.spacing[2],
-  },
-  screenTitle: {
-    fontSize: DesignTokens.typography.fontSize["2xl"],
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    letterSpacing: DesignTokens.typography.letterSpacing.tight,
-    color: DesignTokens.colors.text.primary,
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-  },
-  searchInputContainer: {
-    flex: 1,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: DesignTokens.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: DesignTokens.colors.border.light,
-    padding: DesignTokens.spacing[4],
-  },
-  searchBarFocused: {
-    borderBottomWidth: 2,
-    borderBottomColor: SEARCH_ICON_COLOR,
-  },
-  searchIcon: {
-    marginRight: DesignTokens.spacing[4],
-    color: SEARCH_ICON_COLOR,
-    ...DesignTokens.shadows.sm,
-  },
-  searchBarInput: {
-    flex: 1,
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.normal,
-    color: DesignTokens.colors.text.primary,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-  },
-  tabViewWrapper: {
-    flex: 1,
-    backgroundColor: "#f1f5f9",
-  },
-  filterChipsSection: {
-    paddingHorizontal: DesignTokens.spacing[4],
-    gap: DesignTokens.spacing[4],
-    backgroundColor: DesignTokens.colors.background.tertiary,
-    borderRadius: DesignTokens.borderRadius.sm,
-    marginTop: DesignTokens.spacing[2],
-  },
-  filterChipsSectionCollapsed: {
-    gap: 0,
-  },
-  filterChipsBar: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  filterChipsBarLeftPress: {
-    flex: 1,
-    minWidth: 0,
-    paddingRight: DesignTokens.spacing[2],
-    height: 40,
-  },
-  filterChipsBarActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 0,
-    gap: DesignTokens.spacing[1],
-  },
-  filterChipsBarExpanded: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DesignTokens.colors.border.light,
-    paddingBottom: DesignTokens.spacing[3],
-    marginBottom: DesignTokens.spacing[1],
-  },
-  filterChipsBarLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-  },
-  filterChipsBarTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    color: DesignTokens.colors.text.primary,
-    letterSpacing: DesignTokens.typography.letterSpacing.tight,
-    marginTop: DesignTokens.spacing[4],
-  },
-  filterActivePill: {
-    width: DesignTokens.spacing[2],
-    height: DesignTokens.spacing[2],
-    borderRadius: DesignTokens.borderRadius.sm,
-    backgroundColor: DesignTokens.colors.primary[600],
-    ...DesignTokens.shadows.sm,
-  },
-  filterClearBtn: {
-    paddingVertical: DesignTokens.spacing[2],
-    paddingHorizontal: DesignTokens.spacing[4],
-    borderRadius: DesignTokens.borderRadius.full,
-    backgroundColor: DesignTokens.colors.primary[50],
-  },
-  filterClearBtnText: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.primary[700],
-  },
-  filterChipsChevronHit: {
-    padding: DesignTokens.spacing[1],
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterLabeledRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: DesignTokens.spacing[2],
-    gap: DesignTokens.spacing[3],
-  },
-  filterRowLabel: {
-    width: 90,
-    flexShrink: 0,
-    paddingTop: DesignTokens.spacing[1],
-    fontSize: DesignTokens.typography.fontSize.base,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.secondary,
-    lineHeight: DesignTokens.typography.fontSize.sm * 1.35,
-  },
-  filterRowChipsWrap: {
-    flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-    minWidth: 0,
-  },
-  filterRowScroll: {
-    flexGrow: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  filterRowScrollContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-    paddingVertical: 0,
-  },
-});
+export default function LeaderboardPage() {
+  return <LeaderboardView showBack />;
+}

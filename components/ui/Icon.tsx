@@ -14,6 +14,7 @@ const MATERIAL_ICON_MAP: Record<string, string> = {
   'filter': 'filter-outline',
   'users': 'account-group',
   'x': 'close',
+  'chevron-left': 'chevron-left',
   'chevron-right': 'chevron-right',
   'map-pin': 'map-marker-outline',
   'trending-up': 'trending-up',

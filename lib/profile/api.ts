@@ -6,6 +6,7 @@ import type {
   InsightsResponse,
   PlayerStatsResponse,
   ProfileMatchHistoryResponse,
+  ProfileOverviewResponse,
   ShotsAnalysisResponse,
   TeamsResponse,
   TeamStatsResponse,
@@ -51,6 +52,13 @@ export async function fetchPlayerStats(
   userId: string,
 ): Promise<PlayerStatsResponse> {
   const { data } = await axiosInstance.get(`profile/${userId}/player-stats`);
+  return data;
+}
+
+export async function fetchProfileOverview(
+  userId: string,
+): Promise<ProfileOverviewResponse> {
+  const { data } = await axiosInstance.get(`profile/${userId}/overview`);
   return data;
 }
 

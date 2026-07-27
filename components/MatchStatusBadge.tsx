@@ -1,61 +1,122 @@
-import { formatTimeDuration } from "@/lib/utils";
-import { DesignTokens } from "@/constants/designTokens";
-import { StyleSheet, Text, View } from "react-native";
+import { PulsingLiveDot } from "@/components/matches/PulsingLiveDot";
+import { DesignTokens, type ThemeColors } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { formatLiveElapsed, formatTimeDuration } from "@/lib/utils";
+import { StyleSheet, Text, View, type TextStyle } from "react-native";
 
 type MatchStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 
 type Props = {
   status: MatchStatus | string;
   matchDuration?: number;
+  startedAt?: string | Date;
   compact?: boolean;
 };
 
-export function getMatchStatusLabel(status: MatchStatus | string, matchDuration?: number): string {
+type TextProps = {
+  status: MatchStatus | string;
+  matchDuration?: number;
+  startedAt?: string | Date;
+  style?: TextStyle;
+};
+
+export function getMatchStatusColor(
+  status: MatchStatus | string,
+  colors: ThemeColors,
+  matchDuration?: number,
+): string {
   const isCompletedMatch = status === "completed" || (matchDuration != null && matchDuration > 0);
 
-  if (status === "in_progress") return "Live";
+  if (status === "in_progress") return colors.status.live;
+  if (isCompletedMatch) return colors.status.completed;
+  if (status === "scheduled") return colors.status.scheduled;
+  if (status === "cancelled") return colors.gray[500];
+  return colors.text.tertiary;
+}
+
+export function getMatchStatusLabel(
+  status: MatchStatus | string,
+  matchDuration?: number,
+  startedAt?: string | Date,
+): string {
+  const isCompletedMatch = status === "completed" || (matchDuration != null && matchDuration > 0);
+
+  if (status === "in_progress") {
+    const elapsed = formatLiveElapsed(startedAt);
+    return elapsed ? `LIVE · ${elapsed}` : "LIVE";
+  }
   if (isCompletedMatch) {
     return matchDuration != null && matchDuration > 0
       ? formatTimeDuration(matchDuration)
       : "Completed";
   }
-  if (status === "scheduled") return "Scheduled";
+  if (status === "scheduled") return "Upcoming";
   if (status === "cancelled") return "Cancelled";
   if (matchDuration != null && matchDuration > 0) return formatTimeDuration(matchDuration);
   return status || "Unknown";
 }
 
-export default function MatchStatusBadge({ status, matchDuration, compact = false }: Props) {
+export function MatchStatusText({ status, matchDuration, startedAt, style }: TextProps) {
+  const theme = useThemeColors();
+  const label = getMatchStatusLabel(status, matchDuration, startedAt);
+  const color = getMatchStatusColor(status, theme.colors, matchDuration);
+  const isLive = status === "in_progress";
+
+  return (
+    <Text
+      style={[
+        {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: isLive
+            ? theme.typography.fontWeight.bold
+            : theme.typography.fontWeight.medium,
+          color,
+          letterSpacing: isLive ? 0.3 : 0,
+        },
+        style,
+      ]}
+      numberOfLines={1}
+    >
+      {label}
+    </Text>
+  );
+}
+
+export default function MatchStatusBadge({
+  status,
+  matchDuration,
+  startedAt,
+  compact = false,
+}: Props) {
   const isCompletedMatch = status === "completed" || (matchDuration != null && matchDuration > 0);
-  const label = getMatchStatusLabel(status, matchDuration);
+  const label = getMatchStatusLabel(status, matchDuration, startedAt);
 
   const getBadgeStyle = () => {
-    // Use completed style for matches that appear completed (have duration)
     if (status === "in_progress") {
       return {
-        bg: "rgba(239, 68, 68, 0.08)", // soft red
+        bg: "rgba(239, 68, 68, 0.08)",
         border: "rgba(239, 68, 68, 0.25)",
         text: DesignTokens.colors.error,
         dot: DesignTokens.colors.error,
       };
     }
-    
+
     if (isCompletedMatch || status === "completed") {
       return {
-        bg: "rgba(148, 163, 184, 0.08)", // slate
-        border: "rgba(148, 163, 184, 0.25)",
-        text: DesignTokens.colors.gray[400],
+        bg: "rgba(34, 197, 94, 0.08)",
+        border: "rgba(34, 197, 94, 0.25)",
+        text: DesignTokens.colors.success,
       };
     }
-    
+
     if (status === "scheduled") {
       return {
-        bg: "rgba(59, 130, 246, 0.08)", // blue
+        bg: "rgba(59, 130, 246, 0.08)",
         border: "rgba(59, 130, 246, 0.25)",
-        text: DesignTokens.colors.primary[500],
+        text: DesignTokens.colors.status.scheduled,
       };
     }
-    
+
     if (status === "cancelled") {
       return {
         bg: "rgba(100, 116, 139, 0.08)",
@@ -63,8 +124,7 @@ export default function MatchStatusBadge({ status, matchDuration, compact = fals
         text: DesignTokens.colors.gray[500],
       };
     }
-    
-    // Default style for unknown statuses
+
     return {
       bg: "rgba(255,255,255,0.05)",
       border: "rgba(255,255,255,0.1)",
@@ -85,13 +145,9 @@ export default function MatchStatusBadge({ status, matchDuration, compact = fals
         },
       ]}
     >
-      {status === "in_progress" && (
-        <View style={[styles.dot, { backgroundColor: badge.dot }]} />
-      )}
+      {status === "in_progress" && <PulsingLiveDot size={6} color={badge.dot} />}
 
-      <Text style={[styles.badgeText, { color: badge.text }]}>
-        {label}
-      </Text>
+      <Text style={[styles.badgeText, { color: badge.text }]}>{label}</Text>
     </View>
   );
 }
@@ -103,7 +159,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: DesignTokens.spacing[3],
     paddingVertical: DesignTokens.spacing[1],
-    borderRadius: 999, // pill
+    borderRadius: 999,
     borderWidth: 1,
     alignSelf: "flex-start",
   },
@@ -116,10 +172,5 @@ const styles = StyleSheet.create({
     fontSize: DesignTokens.typography.fontSize.xs,
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     letterSpacing: 0.4,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
   },
 });

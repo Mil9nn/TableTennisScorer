@@ -16,10 +16,68 @@ import { Icon } from "@/components/ui/Icon";
 import * as Haptics from "expo-haptics";
 import IndividualMatchForm from "./components/IndividualMatchForm";
 import TeamMatchForm from "./components/TeamMatchForm";
-import { DesignTokens } from "@/constants/designTokens";
-import { createFlowChoiceStyles as categoryStyles } from "@/styles/createFlowChoiceStyles";
+import { getCreateFlowChoiceStyles } from "@/styles/createFlowChoiceStyles";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useMemo } from "react";
 
 export default function CreateMatchPage() {
+  const theme = useThemeColors();
+  const categoryStyles = useMemo(() => getCreateFlowChoiceStyles(theme), [theme]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: theme.colors.background.primary,
+        },
+        header: {
+          backgroundColor: theme.colors.background.primary,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        headerContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[4],
+          paddingHorizontal: theme.spacing[4],
+          height: 56,
+        },
+        backButton: {
+          padding: theme.spacing[2],
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: "transparent",
+        },
+        headerTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        keyboardAvoidingView: {
+          flex: 1,
+        },
+        scrollContainer: {
+          flex: 1,
+          paddingTop: theme.spacing[4],
+        },
+        scrollContent: {
+          flexGrow: 1,
+        },
+        categoryWrapper: {
+          marginBottom: theme.spacing[10],
+          paddingHorizontal: theme.spacing[4],
+        },
+        categoryHeader: {
+          marginBottom: theme.spacing[5],
+        },
+        categoryTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+      }),
+    [theme],
+  );
+
   const [matchCategory, setMatchCategory] = useState<
     "individual" | "team"
   >("individual");
@@ -99,7 +157,7 @@ export default function CreateMatchPage() {
             <Icon
               name="chevron-left"
               size={16}
-              color={DesignTokens.colors.text.primary}
+              color={theme.colors.text.primary}
             />
           </Pressable>
 
@@ -164,104 +222,3 @@ export default function CreateMatchPage() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: DesignTokens.colors.background.primary,
-  },
-
-  header: {
-    backgroundColor: DesignTokens.colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: DesignTokens.colors.border.light,
-  },
-
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[4],
-    paddingHorizontal: DesignTokens.spacing[4],
-    height: 56,
-  },
-
-  backButton: {
-    padding: DesignTokens.spacing[2],
-    borderRadius: DesignTokens.borderRadius.sm,
-    backgroundColor: "transparent",
-  },
-
-  headerTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.primary,
-  },
-
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-
-  scrollContainer: {
-    flex: 1,
-    paddingTop: DesignTokens.spacing[4],
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  categoryWrapper: {
-    marginBottom: DesignTokens.spacing[10],
-    paddingHorizontal: DesignTokens.spacing[4],
-  },
-
-  categoryHeader: {
-    marginBottom: DesignTokens.spacing[5],
-  },
-
-  categoryTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.primary,
-  },
-
-  categoryContainer: {
-    flexDirection: "column",
-    backgroundColor: DesignTokens.colors.background.secondary,
-    borderRadius: DesignTokens.borderRadius.sm,
-    padding: DesignTokens.spacing[1],
-    gap: DesignTokens.spacing[1],
-  },
-
-  categoryButton: {
-    paddingVertical: DesignTokens.spacing[3],
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: DesignTokens.borderRadius.sm,
-    backgroundColor: "transparent",
-    elevation: 0,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0,
-    shadowRadius: 2,
-  },
-
-  categoryButtonActive: {
-    backgroundColor: DesignTokens.colors.background.primary,
-    elevation: 2,
-    shadowOpacity: 0.05,
-  },
-
-  categoryButtonText: {
-    fontSize: DesignTokens.typography.fontSize.xl,
-    fontWeight: DesignTokens.typography.fontWeight.medium,
-    color: DesignTokens.colors.text.secondary,
-  },
-
-  categoryButtonTextActive: {
-    color: "#4974db",
-  },
-});

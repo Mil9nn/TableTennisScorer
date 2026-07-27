@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getApiBaseUrl } from "@/lib/appOrigin";
+import { useNetworkStore } from "@/hooks/useNetworkStore";
 
 // Do not set a default Content-Type. If it is forced to application/json, axios will JSON-serialize
 // FormData and break multipart uploads. JSON bodies still get application/json automatically.
@@ -24,3 +25,16 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => {
+    useNetworkStore.getState().setOffline(false);
+    return response;
+  },
+  (error) => {
+    if (!error.response && error.message?.includes("Network")) {
+      useNetworkStore.getState().setOffline(true);
+    }
+    return Promise.reject(error);
+  },
+);

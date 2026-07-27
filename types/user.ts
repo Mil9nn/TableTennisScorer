@@ -11,7 +11,6 @@ export interface User {
   handedness?: "left" | "right" | "ambidextrous";
   phoneNumber?: string;
   location?: string;
-  bio?: string;
 
   // Profile completion tracking
   isProfileComplete?: boolean;

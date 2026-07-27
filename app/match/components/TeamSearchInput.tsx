@@ -1,6 +1,6 @@
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { axiosInstance } from "@/lib/axiosInstance";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -34,6 +34,116 @@ export default function TeamSearchInput({
   clearAfterSelect?: boolean;
   defaultValue?: string;
 }) {
+  const theme = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          position: "relative",
+          width: "100%",
+        },
+        inputContainer: {
+          width: "100%",
+          position: "relative",
+        },
+        inputRow: {
+          position: "relative",
+          width: "100%",
+        },
+        fieldContainer: {
+          width: "100%",
+        },
+        inputWithTrailing: {
+          paddingRight: theme.spacing[8],
+        },
+        loadingContainer: {
+          position: "absolute",
+          right: theme.spacing[3],
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+          minWidth: theme.spacing[8],
+        },
+        selectedContainer: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: theme.spacing[6],
+          backgroundColor: theme.colors.background.secondary,
+        },
+        selectedContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          flex: 1,
+        },
+        avatar: {
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+          backgroundColor: theme.colors.gray[200],
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        },
+        avatarImage: {
+          width: 32,
+          height: 32,
+          borderRadius: 16,
+        },
+        avatarText: {
+          fontSize: 14,
+          fontWeight: "600",
+          color: theme.colors.text.secondary,
+        },
+        selectedName: {
+          fontSize: 14,
+          fontWeight: "500",
+          color: theme.colors.text.primary,
+        },
+        clearButton: {
+          padding: 4,
+        },
+        clearIcon: {
+          fontSize: 16,
+          color: theme.colors.text.tertiary,
+        },
+        dropdown: {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          backgroundColor: theme.colors.background.primary,
+          elevation: 2,
+          zIndex: 1000,
+          maxHeight: 300,
+        },
+        dropdownBottom: {
+          top: "100%",
+          marginTop: theme.spacing[2],
+        },
+        dropdownTop: {
+          bottom: "100%",
+        },
+        teamList: {
+          maxHeight: 256,
+        },
+        teamItem: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+          paddingHorizontal: theme.spacing[3],
+          paddingVertical: theme.spacing[3],
+        },
+        teamName: {
+          fontSize: 14,
+          fontWeight: "500",
+          color: theme.colors.text.primary,
+        },
+      }),
+    [theme],
+  );
+
   const [query, setQuery] = useState(defaultValue || "");
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
@@ -203,7 +313,7 @@ export default function TeamSearchInput({
               <View style={styles.loadingContainer} pointerEvents="none">
                 <ActivityIndicator
                   size="small"
-                  color={DesignTokens.colors.text.tertiary}
+                  color={theme.colors.text.tertiary}
                 />
               </View>
             )}
@@ -232,111 +342,3 @@ export default function TeamSearchInput({
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-    width: "100%",
-  },
-  inputContainer: {
-    width: "100%",
-    position: "relative",
-  },
-  inputRow: {
-    position: "relative",
-    width: "100%",
-  },
-  fieldContainer: {
-    width: "100%",
-  },
-  inputWithTrailing: {
-    paddingRight: DesignTokens.spacing[8],
-  },
-  loadingContainer: {
-    position: "absolute",
-    right: DesignTokens.spacing[3],
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: DesignTokens.spacing[8],
-  },
-  selectedContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: DesignTokens.spacing[6],
-    backgroundColor: DesignTokens.colors.background.secondary,
-  },
-  selectedContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#e5e7eb",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  selectedName: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#111827",
-  },
-  clearButton: {
-    padding: 4,
-  },
-  clearIcon: {
-    fontSize: 16,
-    color: "#6b7280",
-  },
-  dropdown: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    elevation: 2,
-    zIndex: 1000,
-    maxHeight: 300,
-  },
-  dropdownBottom: {
-    top: '100%',
-    marginTop: DesignTokens.spacing[2],
-  },
-  dropdownTop: {
-    bottom: '100%',
-  },
-  teamList: {
-    maxHeight: 256,
-  },
-  teamItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-    paddingHorizontal: DesignTokens.spacing[3],
-    paddingVertical: DesignTokens.spacing[3],
-  },
-  teamItemPressed: {
-    backgroundColor: "#f3f4f6",
-  },
-  teamName: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#111827",
-  },
-});

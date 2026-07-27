@@ -1,112 +1,126 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
-const AVATAR_SIZE = 32;
-const SKELETON_COUNT = 10;
+const ROW_COUNT = 8;
+const AVATAR_SIZE = 44;
 
-const tokens = DesignTokens;
+function TeamMatchRowSkeleton() {
+  const theme = useThemeColors();
 
-function TeamMatchCardSkeleton() {
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        row: {
+          gap: theme.spacing[3],
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[4],
+        },
+        rowTop: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+        },
+        sideBlock: {
+          flex: 1,
+          minWidth: 0,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+        },
+        sideRight: {
+          justifyContent: "flex-end",
+        },
+        metaStack: {
+          gap: theme.spacing[2],
+        },
+        metaRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+      }),
+    [theme],
+  );
+
   return (
-      <View style={styles.card}>
-        <View style={styles.cardHeaderRow}>
-          <Skeleton width={72} height={15} borderRadius={DesignTokens.borderRadius.sm} />
-          <Skeleton width={76} height={15} borderRadius={DesignTokens.borderRadius.full} />
+    <View style={styles.row}>
+      <View style={styles.rowTop}>
+        <View style={styles.sideBlock}>
+          <Skeleton
+            muted
+            width={AVATAR_SIZE}
+            height={AVATAR_SIZE}
+            borderRadius={AVATAR_SIZE / 2}
+          />
+          <Skeleton
+            muted
+            width={96}
+            height={13}
+            borderRadius={theme.borderRadius.sm}
+            style={{ flex: 1, maxWidth: 120 }}
+          />
         </View>
 
-        <View style={styles.rowTop}>
-          <View style={styles.sideBlock}>
-            <Skeleton
-              width={AVATAR_SIZE}
-              height={AVATAR_SIZE}
-              borderRadius={AVATAR_SIZE / 2}
-            />
-            <Skeleton
-              width={100}
-              height={12}
-              borderRadius={DesignTokens.borderRadius.sm}
-              style={styles.teamNameSkeleton}
-            />
-          </View>
+        <Skeleton muted width={44} height={18} borderRadius={theme.borderRadius.sm} />
 
-          <View style={[styles.sideBlock, styles.sideRight]}>
-            <Skeleton
-              width={100}
-              height={15}
-              borderRadius={DesignTokens.borderRadius.sm}
-              style={styles.teamNameSkeleton}
-            />
-            <Skeleton
-              width={AVATAR_SIZE}
-              height={AVATAR_SIZE}
-              borderRadius={AVATAR_SIZE / 2}
-            />
-          </View>
-        </View>
-
-        <View style={styles.metaRow}>
-          <Skeleton width={64} height={11} borderRadius={DesignTokens.borderRadius.sm} />
-          <Skeleton width={56} height={11} borderRadius={DesignTokens.borderRadius.sm} />
-          <Skeleton width={88} height={11} borderRadius={DesignTokens.borderRadius.sm} />
+        <View style={[styles.sideBlock, styles.sideRight]}>
+          <Skeleton
+            muted
+            width={96}
+            height={13}
+            borderRadius={theme.borderRadius.sm}
+            style={{ flex: 1, maxWidth: 120 }}
+          />
+          <Skeleton
+            muted
+            width={AVATAR_SIZE}
+            height={AVATAR_SIZE}
+            borderRadius={AVATAR_SIZE / 2}
+          />
         </View>
       </View>
-  );
-}
 
-export default function TeamMatchesListSkeleton() {
-  return (
-    <View style={styles.listFrame}>
-      {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-        <TeamMatchCardSkeleton key={i} />
-      ))}
+      <View style={styles.metaStack}>
+        <Skeleton muted width={120} height={12} borderRadius={theme.borderRadius.sm} />
+        <View style={styles.metaRow}>
+          <Skeleton muted width={56} height={10} borderRadius={theme.borderRadius.sm} />
+          <Skeleton muted width={48} height={10} borderRadius={theme.borderRadius.sm} />
+          <Skeleton muted width={80} height={10} borderRadius={theme.borderRadius.sm} />
+        </View>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  listFrame: {
-    flex: 1,
-    width: "100%",
-    backgroundColor: tokens.colors.background.secondary,
-    gap: tokens.spacing[2],
-  },
-  card: {
-    backgroundColor: DesignTokens.colors.background.primary,
-    padding: tokens.spacing[4],
-    gap: tokens.spacing[2],
-  },
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: DesignTokens.spacing[10],
-    marginBottom: DesignTokens.spacing[4],
-  },
-  rowTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing[2],
-  },
-  sideBlock: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  sideRight: {
-    justifyContent: "flex-end",
-  },
-  teamNameSkeleton: {
-    minWidth: 0,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginTop: 8,
-    gap: 4,
-  },
-});
+export default function TeamMatchesListSkeleton() {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        listFrame: {
+          flex: 1,
+          width: "100%",
+          backgroundColor: theme.colors.background.tertiary,
+        },
+        cardContainer: {
+          backgroundColor: theme.colors.background.primary,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: theme.colors.border.light,
+        },
+      }),
+    [theme],
+  );
+
+  return (
+    <View style={styles.listFrame}>
+      {Array.from({ length: ROW_COUNT }).map((_, index) => (
+        <View key={index} style={styles.cardContainer}>
+          <TeamMatchRowSkeleton />
+        </View>
+      ))}
+    </View>
+  );
+}

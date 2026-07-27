@@ -11,7 +11,6 @@ export interface ProfileUserSummary {
   fullName?: string;
   email?: string;
   profileImage?: string;
-  bio?: string;
   handedness?: string;
   location?: string;
   gender?: string;

@@ -83,16 +83,6 @@ export function formatDifferential(value: number): string {
 }
 
 /**
- * Get color for differential value
- * Positive → Green, Negative → Red, Zero → Gray
- */
-export function getDifferentialColor(value: number): string {
-  if (value > 0) return "#22c55e"; // emerald-500
-  if (value < 0) return "#f43f5e"; // rose-500
-  return "#6b7280"; // gray-500
-}
-
-/**
  * Get color for win rate value
  * High WR → Green, Low WR → Red, Medium → Blue
  */

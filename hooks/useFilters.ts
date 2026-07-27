@@ -109,13 +109,15 @@ export function useFilters<T extends BaseFilterState>({
           return;
         }
 
-        // Handle sort conversion for tournaments
+        // Handle sort conversion (tournaments + match feeds)
         if (key === "sort") {
           if (value && value !== "all" && value !== "") {
-            // Convert sort values to sortBy and sortOrder like Next.js
-            if (value === "recent") {
+            if (value === "recent" || value === "newest") {
               params.set("sortBy", "createdAt");
               params.set("sortOrder", "desc");
+            } else if (value === "oldest") {
+              params.set("sortBy", "createdAt");
+              params.set("sortOrder", "asc");
             } else if (value === "upcoming") {
               params.set("sortBy", "startDate");
               params.set("sortOrder", "asc");
@@ -124,6 +126,9 @@ export function useFilters<T extends BaseFilterState>({
               params.set("sortOrder", "asc");
             } else if (value === "participants") {
               params.set("sortBy", "startDate");
+              params.set("sortOrder", "desc");
+            } else if (value === "status") {
+              params.set("sortBy", "status");
               params.set("sortOrder", "desc");
             } else {
               params.set("sortBy", value);
@@ -134,6 +139,10 @@ export function useFilters<T extends BaseFilterState>({
         }
 
         if (value && value !== "all" && value !== "") {
+          // Client-only: not a query param on public list APIs
+          if (key === "status" && value === "mine") {
+            return;
+          }
           params.set(key, value);
         }
       });
@@ -163,22 +172,29 @@ export interface IndividualMatchFilters extends BaseFilterState {
   search: string;
   type: string;
   status: string;
+  sort: string;
   /** Tracks quick preset: `""` = any dates, else preset id or `custom`. */
   datePreset: string;
   dateFrom: string;
   dateTo: string;
 }
 
-export const useIndividualMatchFilters = (debounceMs = 300) => {
+export const DEFAULT_INDIVIDUAL_MATCH_FILTERS: IndividualMatchFilters = {
+  search: "",
+  type: "",
+  status: "",
+  sort: "newest",
+  datePreset: "",
+  dateFrom: "",
+  dateTo: "",
+};
+
+export const useIndividualMatchFilters = (
+  debounceMs = 300,
+  initialFilters: IndividualMatchFilters = DEFAULT_INDIVIDUAL_MATCH_FILTERS,
+) => {
   return useFilters<IndividualMatchFilters>({
-    initialFilters: {
-      search: "",
-      type: "",
-      status: "",
-      datePreset: "",
-      dateFrom: "",
-      dateTo: "",
-    },
+    initialFilters,
     debounceMs,
   });
 };
@@ -188,21 +204,28 @@ export interface TeamMatchFilters extends BaseFilterState {
   search: string;
   format: string;
   status: string;
+  sort: string;
   datePreset: string;
   dateFrom: string;
   dateTo: string;
 }
 
-export const useTeamMatchFilters = (debounceMs = 300) => {
+export const DEFAULT_TEAM_MATCH_FILTERS: TeamMatchFilters = {
+  search: "",
+  format: "",
+  status: "",
+  sort: "newest",
+  datePreset: "",
+  dateFrom: "",
+  dateTo: "",
+};
+
+export const useTeamMatchFilters = (
+  debounceMs = 300,
+  initialFilters: TeamMatchFilters = DEFAULT_TEAM_MATCH_FILTERS,
+) => {
   return useFilters<TeamMatchFilters>({
-    initialFilters: {
-      search: "",
-      format: "",
-      status: "",
-      datePreset: "",
-      dateFrom: "",
-      dateTo: "",
-    },
+    initialFilters,
     debounceMs,
   });
 };
@@ -231,4 +254,32 @@ export const useTournamentsFilters = (debounceMs = 300) => {
     },
     debounceMs,
   });
+};
+
+// Leaderboard filter state (individual tab)
+export interface LeaderboardFiltersState extends BaseFilterState {
+  search: string;
+  type: string;
+  matchFormat: string;
+  gender: string;
+  handedness: string;
+  datePreset: string;
+  dateFrom: string;
+  dateTo: string;
 }
+
+export const useLeaderboardFilters = (debounceMs = 300) => {
+  return useFilters<LeaderboardFiltersState>({
+    initialFilters: {
+      search: "",
+      type: "",
+      matchFormat: "",
+      gender: "",
+      handedness: "",
+      datePreset: "",
+      dateFrom: "",
+      dateTo: "",
+    },
+    debounceMs,
+  });
+};

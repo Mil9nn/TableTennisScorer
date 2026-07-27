@@ -1,60 +1,88 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 const ROW_COUNT = 4;
 
-export default function HomeActivitySkeleton() {
+type HomeActivitySkeletonProps = {
+  rowCount?: number;
+};
+
+export default function HomeActivitySkeleton({ rowCount = ROW_COUNT }: HomeActivitySkeletonProps) {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        listFrame: {
+          paddingHorizontal: theme.spacing[4],
+          gap: theme.spacing[4],
+        },
+        card: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: theme.colors.background.primary,
+          paddingVertical: theme.spacing[4],
+          paddingHorizontal: theme.spacing[4],
+          borderRadius: theme.borderRadius.base,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+        },
+        row: {
+          flexDirection: "row",
+          alignItems: "center",
+          flex: 1,
+          paddingRight: theme.spacing[1],
+          gap: theme.spacing[2],
+        },
+        content: {
+          flex: 1,
+          minWidth: 0,
+          gap: theme.spacing[1],
+        },
+        trailing: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[1],
+        },
+      }),
+    [theme],
+  );
+
   return (
     <View style={styles.listFrame}>
-      {Array.from({ length: ROW_COUNT }).map((_, index) => (
-        <View key={index} style={styles.rowShell}>
-          <View style={styles.card}>
+      {Array.from({ length: rowCount }).map((_, index) => {
+        const delayMs = index * 70;
+
+        return (
+          <View key={index} style={styles.card}>
             <View style={styles.row}>
-              <Skeleton width={32} height={32} borderRadius={DesignTokens.borderRadius.base} />
               <View style={styles.content}>
-                <Skeleton width="72%" height={14} borderRadius={DesignTokens.borderRadius.sm} />
                 <Skeleton
+                  muted
+                  width="72%"
+                  height={12}
+                  borderRadius={theme.borderRadius.sm}
+                  delayMs={delayMs}
+                />
+                <Skeleton
+                  muted
                   width="48%"
                   height={10}
-                  borderRadius={DesignTokens.borderRadius.sm}
-                  style={styles.subtitle}
+                  borderRadius={theme.borderRadius.sm}
+                  delayMs={delayMs + 40}
                 />
               </View>
-              <Skeleton width={36} height={10} borderRadius={DesignTokens.borderRadius.sm} />
+            </View>
+            <View style={styles.trailing}>
+              <Skeleton muted width={36} height={10} borderRadius={theme.borderRadius.sm} delayMs={delayMs + 60} />
+              <Skeleton muted width={14} height={14} borderRadius={theme.borderRadius.sm} delayMs={delayMs + 80} />
             </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  listFrame: {
-    backgroundColor: DesignTokens.colors.background.tertiary,
-    paddingHorizontal: DesignTokens.spacing[2],
-    paddingBottom: DesignTokens.spacing[2],
-  },
-  rowShell: {
-    borderBottomWidth: 1,
-    borderBottomColor: DesignTokens.colors.border.light,
-  },
-  card: {
-    backgroundColor: DesignTokens.colors.background.secondary,
-    padding: DesignTokens.spacing[4],
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[3],
-  },
-  content: {
-    flex: 1,
-    gap: DesignTokens.spacing[2],
-  },
-  subtitle: {
-    marginTop: DesignTokens.spacing[1],
-  },
-});

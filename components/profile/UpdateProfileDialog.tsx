@@ -1,10 +1,15 @@
 import { Button } from "@/components/ui/Button";
 import { FormTextField } from "@/components/ui/FormTextField";
-import { Textarea } from "@/components/ui/Textarea";
 import { DesignTokens } from "@/constants/designTokens";
 import type { ProfileDisplayUser } from "@/contexts/ProfileContext";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { axiosInstance } from "@/lib/axiosInstance";
+import {
+  calculateAge,
+  defaultDobPickerDate,
+  formatDateOnlyLocal,
+  parseDateOnly,
+} from "@/lib/profile/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
@@ -59,7 +64,6 @@ export function UpdateProfileDialog({
   const [handedness, setHandedness] = useState<HandednessOption | "">("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
-  const [bio, setBio] = useState("");
 
   useEffect(() => {
     if (!visible || !user) return;
@@ -69,10 +73,11 @@ export function UpdateProfileDialog({
     setHandedness((user.handedness as HandednessOption) ?? "");
     setPhoneNumber(user.phoneNumber ?? "");
     setLocation(user.location ?? "");
-    setBio(user.bio ?? "");
   }, [visible, user]);
 
-  const selectedDate = dateOfBirth ? new Date(dateOfBirth) : new Date();
+  const selectedDate = dateOfBirth
+    ? parseDateOnly(dateOfBirth) ?? defaultDobPickerDate()
+    : defaultDobPickerDate();
 
   const handleSave = async () => {
     const trimmedName = fullName.trim();
@@ -84,13 +89,25 @@ export function UpdateProfileDialog({
       });
       return;
     }
-    if (bio.length > 500) {
-      Toast.show({
-        type: "error",
-        text1: "Bio too long",
-        text2: "Bio must be 500 characters or less.",
-      });
-      return;
+
+    if (dateOfBirth) {
+      const age = calculateAge(dateOfBirth);
+      if (age == null) {
+        Toast.show({
+          type: "error",
+          text1: "Invalid date of birth",
+          text2: "Pick a date that makes you between 5 and 120 years old.",
+        });
+        return;
+      }
+      if (age < 5) {
+        Toast.show({
+          type: "error",
+          text1: "Invalid age",
+          text2: "Players must be at least 5 years old.",
+        });
+        return;
+      }
     }
 
     setSaving(true);
@@ -102,7 +119,6 @@ export function UpdateProfileDialog({
         handedness: handedness || undefined,
         phoneNumber: phoneNumber.trim() || undefined,
         location: location.trim() || undefined,
-        bio: bio.trim() || undefined,
       });
       await fetchUser();
       onSaved?.();
@@ -158,11 +174,11 @@ export function UpdateProfileDialog({
                     value={selectedDate}
                     mode="date"
                     display="default"
-                    maximumDate={new Date()}
+                    maximumDate={defaultDobPickerDate(5)}
                     onChange={(_, picked) => {
                       setShowDatePicker(false);
                       if (picked) {
-                        setDateOfBirth(picked.toISOString().split("T")[0]);
+                        setDateOfBirth(formatDateOnlyLocal(picked));
                       }
                     }}
                   />
@@ -237,17 +253,6 @@ export function UpdateProfileDialog({
                 onChangeText={setLocation}
                 containerStyle={styles.field}
               />
-
-              <View style={styles.field}>
-                <Text style={styles.label}>Bio</Text>
-                <Textarea
-                  placeholder="Tell us about yourself..."
-                  value={bio}
-                  onChangeText={setBio}
-                  style={{ minHeight: 100 }}
-                />
-                <Text style={styles.charCount}>{bio.length}/500</Text>
-              </View>
             </View>
           </ScrollView>
         </Dialog.ScrollArea>
@@ -341,11 +346,6 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: "#fff",
-  },
-  charCount: {
-    fontSize: 11,
-    color: "#6B7280",
-    marginTop: 4,
   },
   saveButton: {
     borderRadius: tokens.borderRadius.sm,

@@ -55,11 +55,6 @@ export const completeProfileSchema = z.object({
   playingHand: playingHandSchema.optional(),
 
   gripStyle: gripStyleSchema.optional(),
-
-  bio: z.string()
-    .max(500, "Bio must not exceed 500 characters")
-    .trim()
-    .optional(),
 }).strict();
 
 // Update profile schema (all fields optional)
@@ -98,11 +93,6 @@ export const updateProfileSchema = z.object({
   playingHand: playingHandSchema.optional(),
 
   gripStyle: gripStyleSchema.optional(),
-
-  bio: z.string()
-    .max(500, "Bio must not exceed 500 characters")
-    .trim()
-    .optional(),
 }).strict();
 
 // Profile image upload schema (React Native uses URI strings, not Blob)

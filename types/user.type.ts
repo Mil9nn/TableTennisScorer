@@ -10,7 +10,6 @@ export interface User {
   handedness?: "left" | "right" | "ambidextrous";
   location?: string;
   phoneNumber?: string;
-  bio?: string;
   createdAt?: string;
   updatedAt?: string;
 }

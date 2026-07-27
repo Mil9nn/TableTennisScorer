@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { Button } from "@/components/ui/Button";
-import { Colors, Spacing, Typography } from "@/constants/theme";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { isValidJoinCode } from "@/lib/tournaments/joinLinks";
 
 interface JoinCodeFormProps {
@@ -16,6 +16,7 @@ interface JoinCodeFormProps {
   onChangeCode: (code: string) => void;
   onSubmit: () => void;
   onScanPress: () => void;
+  submitLabel?: string;
 }
 
 export function JoinCodeForm({
@@ -24,16 +25,60 @@ export function JoinCodeForm({
   onChangeCode,
   onSubmit,
   onScanPress,
+  submitLabel = "Join",
 }: JoinCodeFormProps) {
+  const theme = useThemeColors();
   const canSubmit = isValidJoinCode(joinCode) && !loading;
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        inputContainer: {
+          marginBottom: theme.spacing[4],
+        },
+        inputLabel: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[2],
+        },
+        input: {
+          fontSize: theme.typography.fontSize["2xl"],
+          fontFamily: "monospace",
+          letterSpacing: 8,
+          textAlign: "center",
+          textTransform: "uppercase",
+          backgroundColor: theme.colors.background.secondary,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          borderRadius: theme.borderRadius.md,
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[4],
+          color: theme.colors.text.primary,
+        },
+        joinButton: {
+          marginBottom: theme.spacing[2],
+        },
+        scanButton: {
+          marginBottom: theme.spacing[2],
+        },
+        buttonText: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.inverse,
+          marginLeft: theme.spacing[1],
+        },
+        scanButtonText: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.primary[600],
+        },
+      }),
+    [theme],
+  );
 
   return (
     <View>
-      <Text style={styles.cardTitle}>Enter join code</Text>
-      <Text style={styles.cardDescription}>
-        Use the code from your organizer, or scan their QR code
-      </Text>
-
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Join code</Text>
         <TextInput
@@ -45,7 +90,7 @@ export function JoinCodeForm({
           autoCapitalize="characters"
           autoCorrect={false}
           editable={!loading}
-          placeholderTextColor={Colors.light.textTertiary}
+          placeholderTextColor={theme.colors.text.tertiary}
         />
       </View>
 
@@ -59,11 +104,11 @@ export function JoinCodeForm({
       >
         {loading ? (
           <>
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={theme.colors.text.inverse} />
             <Text style={styles.buttonText}>Joining…</Text>
           </>
         ) : (
-          <Text style={styles.buttonText}>Join tournament</Text>
+          <Text style={styles.buttonText}>{submitLabel}</Text>
         )}
       </Button>
 
@@ -80,57 +125,3 @@ export function JoinCodeForm({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  cardTitle: {
-    ...Typography.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.light.text,
-    marginBottom: Spacing.xs,
-  },
-  cardDescription: {
-    ...Typography.sm,
-    color: Colors.light.textSecondary,
-    marginBottom: Spacing.lg,
-  },
-  inputContainer: {
-    marginBottom: Spacing.lg,
-  },
-  inputLabel: {
-    ...Typography.sm,
-    fontWeight: Typography.weights.medium,
-    color: Colors.light.text,
-    marginBottom: Spacing.xs,
-  },
-  input: {
-    ...Typography["2xl"],
-    fontFamily: "monospace",
-    letterSpacing: 8,
-    textAlign: "center",
-    textTransform: "uppercase",
-    backgroundColor: Colors.light.backgroundSecondary,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.base,
-    color: Colors.light.text,
-  },
-  joinButton: {
-    marginBottom: Spacing.sm,
-  },
-  scanButton: {
-    marginBottom: Spacing.lg,
-  },
-  buttonText: {
-    ...Typography.base,
-    fontWeight: Typography.weights.semibold,
-    color: "#fff",
-    marginLeft: Spacing.xs,
-  },
-  scanButtonText: {
-    ...Typography.base,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.light.primary,
-  },
-});

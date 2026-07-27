@@ -70,10 +70,6 @@ export default function ProfileHeadToHeadOpponentScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Text variant="bodySmall" style={{ marginBottom: 12 }}>
-        UserId: {resolvedUserId} • OpponentId: {resolvedOpponentId}
-      </Text>
-
       {summary ? (
         <Card style={{ marginBottom: 12 }}>
           <Card.Content>

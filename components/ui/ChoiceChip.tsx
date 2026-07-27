@@ -1,5 +1,5 @@
-﻿import { DesignTokens } from "@/constants/designTokens";
-import React, { useState } from "react";
+﻿import { useThemeColors } from "@/hooks/useThemeColors";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -9,14 +9,11 @@ import {
   type ViewStyle,
 } from "react-native";
 
-const tokens = DesignTokens;
-
 export type ChoiceChipSelectionTone = "default" | "live";
 
 export interface ChoiceChipProps {
   children: string;
   selected?: boolean;
-  /** When selected, primary (indigo) or live (red) treatment. */
   selectionTone?: ChoiceChipSelectionTone;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
@@ -24,11 +21,6 @@ export interface ChoiceChipProps {
   testID?: string;
 }
 
-/**
- * Small selectable pill used in filter rows and create flows.
- * Visual language aligns with `DesignTokens.components.chip` and
- * `createFlowChoiceStyles` (light border, full-radius pill, semibold label).
- */
 export function ChoiceChip({
   children,
   selected = false,
@@ -38,13 +30,52 @@ export function ChoiceChip({
   textStyle,
   testID,
 }: ChoiceChipProps) {
+  const theme = useThemeColors();
   const [pressed, setPressed] = useState(false);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        pressable: {
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: theme.borderRadius.full,
+          minHeight: 44,
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[2],
+          borderWidth: 1,
+          borderColor: theme.colors.border.medium,
+        },
+        pressablePressed: { opacity: 0.92 },
+        pressableSelected: {
+          backgroundColor: theme.colors.background.primary,
+          borderWidth: 1,
+          borderColor: theme.colors.info,
+        },
+        pressableSelectedLive: {
+          backgroundColor: theme.colors.error,
+          borderWidth: 1,
+          borderColor: theme.colors.error,
+        },
+        label: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.semibold,
+          letterSpacing: theme.typography.letterSpacing.wide,
+        },
+        labelDefault: { color: theme.colors.text.secondary },
+        labelSelected: { color: theme.colors.info },
+        labelSelectedLive: { color: theme.colors.white },
+      }),
+    [theme],
+  );
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      accessibilityLabel={children}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
@@ -54,7 +85,7 @@ export function ChoiceChip({
             ? "rgba(255,255,255,0.25)"
             : selected
               ? "rgba(255,255,255,0.2)"
-              : "rgba(99,102,241,0.12)",
+              : "rgba(59,130,246,0.12)",
         borderless: false,
       }}
       style={[
@@ -80,45 +111,3 @@ export function ChoiceChip({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  pressable: {
-    flexShrink: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: tokens.borderRadius.full,
-    minHeight: 36,
-    paddingHorizontal: tokens.spacing[4],
-    paddingVertical: tokens.spacing[2],
-    borderWidth: 1,
-    borderColor: tokens.colors.border.medium,
-  },
-  pressablePressed: {
-    opacity: 0.92,
-  },
-  pressableSelected: {
-    backgroundColor: tokens.components.chip.default.backgroundColor,
-    borderWidth: 1,
-    borderColor: tokens.colors.info,
-  },
-  pressableSelectedLive: {
-    backgroundColor: tokens.colors.error,
-    borderWidth: 1,
-    borderColor: tokens.colors.error,
-  },
-  label: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    letterSpacing: DesignTokens.typography.letterSpacing.wide,
-  },
-  labelDefault: {
-    color: tokens.components.chip.default.textColor,
-  },
-  labelSelected: {
-    color: tokens.colors.info,
-  },
-  labelSelectedLive: {
-    color: tokens.colors.white,
-  },
-});
-

@@ -2,6 +2,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useMatchStore } from "@/hooks/useMatchStore";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { normalizeMatchIdParam } from "@/lib/normalizeMatchId";
+import { getMatchOpenHref } from "@/lib/matchNavigation";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -37,6 +38,21 @@ export default function MatchDetailsPage() {
       categoryParam === "team" ? "team" : "individual"
     );
   }, [resolvedMatchId, categoryParam, fetchMatch]);
+
+  // Completed matches live on Insights (Info + analytics); skip the details hub.
+  useEffect(() => {
+    if (!match || !resolvedMatchId) return;
+    const loadedId = normalizeMatchIdParam(match._id);
+    if (!loadedId || loadedId !== resolvedMatchId) return;
+    if (match.status !== "completed") return;
+    router.replace(
+      getMatchOpenHref(
+        resolvedMatchId,
+        match.status,
+        categoryParam === "team" ? "team" : "individual",
+      ) as any,
+    );
+  }, [match, resolvedMatchId, categoryParam, router]);
 
   const normalizeId = (value: any): string | null => {
     if (value == null) return null;

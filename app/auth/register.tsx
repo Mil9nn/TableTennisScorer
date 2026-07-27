@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useFocusEffect, useNavigation } from "expo-router";
 import {
   View,
@@ -16,7 +16,7 @@ import {
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { AuthLegalFooter } from "@/components/auth/AuthLegalFooter";
 import Toast from "react-native-toast-message";
@@ -26,109 +26,124 @@ const RegisterPage = () => {
   const navigation = useNavigation();
   const register = useAuthStore((state) => state.register);
   const authLoading = useAuthStore((state) => state.authLoading);
+  const theme = useThemeColors();
 
-  const tokens = DesignTokens;
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        loadingContainer: {
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        loadingText: {
+          marginTop: theme.spacing[8],
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.tertiary,
+        },
+        keyboardAvoidingView: {
+          flex: 1,
+        },
+        scrollContainer: {
+          flex: 1,
+        },
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: theme.spacing[8],
+          paddingVertical: theme.spacing[8],
+        },
+        content: {
+          justifyContent: "center",
+        },
+        header: {
+          alignItems: "center",
+          marginBottom: theme.spacing[12],
+        },
+        logoBox: {
+          width: 56,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        logoImage: {
+          width: "88%",
+          height: "88%",
+        },
+        brandName: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.extrabold,
+          color: theme.colors.text.primary,
+          letterSpacing: theme.typography.letterSpacing.tight,
+          marginBottom: theme.spacing[2],
+        },
+        subtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+        },
+        formCard: {
+          padding: theme.spacing[6],
+        },
+        inputContainer: {
+          marginBottom: theme.spacing[6],
+        },
+        paperInput: {
+          backgroundColor: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.sm,
+          height: 44,
+        },
+        eyeIcon: {
+          padding: theme.spacing[4],
+        },
+        registerButton: {
+          backgroundColor: theme.colors.primary[500],
+          paddingVertical: theme.spacing[6],
+          borderRadius: theme.borderRadius.sm,
+          alignItems: "center",
+          minHeight: 44,
+        },
+        disabledButton: {
+          opacity: 0.7,
+        },
+        registerButtonText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        footer: {
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: theme.spacing[8],
+        },
+        footerText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+        },
+        loginLink: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[500],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+      }),
+    [theme],
+  );
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: tokens.colors.primary[50],
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    loadingText: {
-      marginTop: tokens.spacing[8],
-      fontSize: tokens.typography.fontSize.base,
-      color: tokens.colors.gray[500],
-    },
-    keyboardAvoidingView: {
-      flex: 1,
-    },
-    scrollContainer: {
-      flex: 1,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      justifyContent: "center",
-      paddingHorizontal: tokens.spacing[8],
-      paddingVertical: tokens.spacing[8],
-    },
-    content: {
-      justifyContent: "center",
-    },
-    header: {
-      alignItems: "center",
-      marginBottom: tokens.spacing[12],
-    },
-    logoBox: {
-      width: 56,
-      height: 56,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    logoImage: {
-      width: "88%",
-      height: "88%",
-    },
-    brandName: {
-      fontSize: tokens.typography.fontSize.base,
-      fontWeight: tokens.typography.fontWeight.extrabold,
-      color: tokens.colors.gray[900],
-      letterSpacing: tokens.typography.letterSpacing.tight,
-      marginBottom: tokens.spacing[2],
-    },
-    subtitle: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-      textAlign: "center",
-    },
-    formCard: {
-      padding: tokens.spacing[6],
-    },
-    inputContainer: {
-      marginBottom: tokens.spacing[6],
-    },
-    paperInput: {
-      backgroundColor: tokens.colors.gray[50],
-      fontSize: tokens.typography.fontSize.sm,
-      height: 44,
-    },
-    eyeIcon: {
-      padding: tokens.spacing[4],
-    },
-    registerButton: {
-      backgroundColor: tokens.colors.primary[500],
-      paddingVertical: tokens.spacing[6],
-      borderRadius: tokens.borderRadius.sm,
-      alignItems: "center",
-    },
-    disabledButton: {
-      opacity: 0.7,
-    },
-    registerButtonText: {
-      color: tokens.colors.white,
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-    footer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: tokens.spacing[8],
-    },
-    footerText: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-    },
-    loginLink: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.primary[500],
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-  });
+  const paperTheme = useMemo(
+    () => ({
+      colors: {
+        primary: theme.colors.primary[500],
+        background: "transparent",
+        onSurfaceVariant: theme.colors.text.tertiary,
+      },
+    }),
+    [theme],
+  );
 
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
@@ -201,7 +216,7 @@ const RegisterPage = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={tokens.colors.primary[500]} />
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -224,7 +239,7 @@ const RegisterPage = () => {
             styles.scrollContent,
             {
               paddingBottom:
-                tokens.spacing[8] + (Platform.OS === "ios" ? keyboardInset : 0),
+                theme.spacing[8] + (Platform.OS === "ios" ? keyboardInset : 0),
             },
           ]}
         >
@@ -250,18 +265,14 @@ const RegisterPage = () => {
                   onChangeText={setUsername}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  textColor={theme.colors.text.primary}
                   left={
                     <PaperTextInput.Icon
-                      icon={() => <Icon name="user" size={20} color={tokens.colors.gray[500]} />}
+                      icon={() => <Icon name="user" size={20} color={theme.colors.text.tertiary} />}
                     />
                   }
                   style={styles.paperInput}
-                  theme={{
-                    colors: {
-                      primary: tokens.colors.primary[500],
-                      background: "transparent",
-                    },
-                  }}
+                  theme={paperTheme}
                 />
               </View>
 
@@ -272,18 +283,14 @@ const RegisterPage = () => {
                   value={fullName}
                   onChangeText={setFullName}
                   autoCapitalize="words"
+                  textColor={theme.colors.text.primary}
                   left={
                     <PaperTextInput.Icon
-                      icon={() => <Icon name="person" size={20} color={tokens.colors.gray[500]} />}
+                      icon={() => <Icon name="person" size={20} color={theme.colors.text.tertiary} />}
                     />
                   }
                   style={styles.paperInput}
-                  theme={{
-                    colors: {
-                      primary: tokens.colors.primary[500],
-                      background: "transparent",
-                    },
-                  }}
+                  theme={paperTheme}
                 />
               </View>
 
@@ -296,18 +303,14 @@ const RegisterPage = () => {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  textColor={theme.colors.text.primary}
                   left={
                     <PaperTextInput.Icon
-                      icon={() => <Icon name="email" size={20} color={tokens.colors.gray[500]} />}
+                      icon={() => <Icon name="email" size={20} color={theme.colors.text.tertiary} />}
                     />
                   }
                   style={styles.paperInput}
-                  theme={{
-                    colors: {
-                      primary: tokens.colors.primary[500],
-                      background: "transparent",
-                    },
-                  }}
+                  theme={paperTheme}
                 />
               </View>
 
@@ -319,9 +322,10 @@ const RegisterPage = () => {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  textColor={theme.colors.text.primary}
                   left={
                     <PaperTextInput.Icon
-                      icon={() => <Icon name="lock" size={20} color={tokens.colors.gray[500]} />}
+                      icon={() => <Icon name="lock" size={20} color={theme.colors.text.tertiary} />}
                     />
                   }
                   right={
@@ -334,19 +338,14 @@ const RegisterPage = () => {
                           <Icon
                             name={showPassword ? "eye-slash" : "eye"}
                             size={20}
-                            color={tokens.colors.gray[500]}
+                            color={theme.colors.text.tertiary}
                           />
                         </TouchableOpacity>
                       )}
                     />
                   }
                   style={styles.paperInput}
-                  theme={{
-                    colors: {
-                      primary: tokens.colors.primary[500],
-                      background: "transparent",
-                    },
-                  }}
+                  theme={paperTheme}
                 />
               </View>
 
@@ -358,9 +357,10 @@ const RegisterPage = () => {
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
+                  textColor={theme.colors.text.primary}
                   left={
                     <PaperTextInput.Icon
-                      icon={() => <Icon name="lock" size={20} color={tokens.colors.gray[500]} />}
+                      icon={() => <Icon name="lock" size={20} color={theme.colors.text.tertiary} />}
                     />
                   }
                   right={
@@ -373,19 +373,14 @@ const RegisterPage = () => {
                           <Icon
                             name={showConfirmPassword ? "eye-slash" : "eye"}
                             size={20}
-                            color={tokens.colors.gray[500]}
+                            color={theme.colors.text.tertiary}
                           />
                         </TouchableOpacity>
                       )}
                     />
                   }
                   style={styles.paperInput}
-                  theme={{
-                    colors: {
-                      primary: tokens.colors.primary[500],
-                      background: "transparent",
-                    },
-                  }}
+                  theme={paperTheme}
                 />
               </View>
 
@@ -395,7 +390,7 @@ const RegisterPage = () => {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={theme.colors.white} />
                 ) : (
                   <Text style={styles.registerButtonText}>Sign Up</Text>
                 )}

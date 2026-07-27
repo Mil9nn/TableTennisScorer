@@ -31,7 +31,6 @@ function mapAuthUser(me: User): ProfileDisplayUser {
     handedness: me.handedness,
     phoneNumber: me.phoneNumber,
     location: me.location,
-    bio: me.bio,
   };
 }
 

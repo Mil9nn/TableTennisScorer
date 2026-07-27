@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useLocalSearchParams, useFocusEffect, useNavigation, type Href } from "expo-router";
 import {
   View,
@@ -16,7 +16,7 @@ import {
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import {
   passwordResetErrorMessage,
   requestPasswordResetCode,
@@ -31,7 +31,7 @@ const ResetPasswordPage = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const params = useLocalSearchParams<{ email?: string }>();
-  const tokens = DesignTokens;
+  const theme = useThemeColors();
   const email = (params.email ?? "").trim().toLowerCase();
 
   const [otp, setOtp] = useState("");
@@ -42,85 +42,110 @@ const ResetPasswordPage = () => {
   const [resending, setResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: tokens.colors.primary[50],
-    },
-    keyboardAvoidingView: { flex: 1 },
-    scrollContent: {
-      flexGrow: 1,
-      justifyContent: "center",
-      paddingHorizontal: tokens.spacing[8],
-      paddingVertical: tokens.spacing[8],
-    },
-    header: {
-      alignItems: "center",
-      marginBottom: tokens.spacing[10],
-    },
-    logoBox: {
-      width: 56,
-      height: 56,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    logoImage: { width: "88%", height: "88%" },
-    brandName: {
-      fontSize: tokens.typography.fontSize.base,
-      fontWeight: tokens.typography.fontWeight.extrabold,
-      color: tokens.colors.gray[900],
-      letterSpacing: tokens.typography.letterSpacing.tight,
-      marginBottom: tokens.spacing[2],
-    },
-    subtitle: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-      textAlign: "center",
-      lineHeight: 20,
-    },
-    emailText: {
-      fontWeight: tokens.typography.fontWeight.semibold,
-      color: tokens.colors.gray[700],
-    },
-    formCard: { padding: tokens.spacing[6], gap: tokens.spacing[6] },
-    otpInput: {
-      fontSize: 28,
-      letterSpacing: 12,
-      textAlign: "center",
-      backgroundColor: tokens.colors.gray[50],
-      borderRadius: tokens.borderRadius.sm,
-      paddingVertical: tokens.spacing[6],
-      color: tokens.colors.gray[900],
-    },
-    paperInput: {
-      backgroundColor: tokens.colors.gray[50],
-      fontSize: tokens.typography.fontSize.sm,
-      height: 44,
-    },
-    eyeIcon: { padding: tokens.spacing[4] },
-    submitButton: {
-      backgroundColor: tokens.colors.primary[500],
-      paddingVertical: tokens.spacing[6],
-      borderRadius: tokens.borderRadius.sm,
-      alignItems: "center",
-    },
-    disabledButton: { opacity: 0.7 },
-    submitButtonText: {
-      color: tokens.colors.white,
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-    resendButton: { alignItems: "center" },
-    resendText: {
-      color: tokens.colors.primary[500],
-      fontSize: tokens.typography.fontSize.sm,
-    },
-    backButton: { alignItems: "center" },
-    backText: {
-      color: tokens.colors.gray[500],
-      fontSize: tokens.typography.fontSize.sm,
-    },
-  });
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        keyboardAvoidingView: { flex: 1 },
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: theme.spacing[8],
+          paddingVertical: theme.spacing[8],
+        },
+        header: {
+          alignItems: "center",
+          marginBottom: theme.spacing[10],
+        },
+        logoBox: {
+          width: 56,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        logoImage: { width: "88%", height: "88%" },
+        brandName: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.extrabold,
+          color: theme.colors.text.primary,
+          letterSpacing: theme.typography.letterSpacing.tight,
+          marginBottom: theme.spacing[2],
+        },
+        subtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+          lineHeight: 20,
+        },
+        emailText: {
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.secondary,
+        },
+        formCard: { padding: theme.spacing[6], gap: theme.spacing[6] },
+        otpInput: {
+          fontSize: 28,
+          letterSpacing: 12,
+          textAlign: "center",
+          backgroundColor: theme.colors.background.primary,
+          borderRadius: theme.borderRadius.sm,
+          paddingVertical: theme.spacing[6],
+          color: theme.colors.text.primary,
+          minHeight: 56,
+        },
+        paperInput: {
+          backgroundColor: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.sm,
+          height: 44,
+        },
+        eyeIcon: { padding: theme.spacing[4] },
+        submitButton: {
+          backgroundColor: theme.colors.primary[500],
+          paddingVertical: theme.spacing[6],
+          borderRadius: theme.borderRadius.sm,
+          alignItems: "center",
+          minHeight: 44,
+        },
+        disabledButton: { opacity: 0.7 },
+        submitButtonText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        resendButton: {
+          alignItems: "center",
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        resendText: {
+          color: theme.colors.primary[500],
+          fontSize: theme.typography.fontSize.sm,
+        },
+        backButton: {
+          alignItems: "center",
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        backText: {
+          color: theme.colors.text.tertiary,
+          fontSize: theme.typography.fontSize.sm,
+        },
+      }),
+    [theme],
+  );
+
+  const paperTheme = useMemo(
+    () => ({
+      colors: {
+        primary: theme.colors.primary[500],
+        background: "transparent",
+        onSurfaceVariant: theme.colors.text.tertiary,
+      },
+    }),
+    [theme],
+  );
 
   useFocusEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -229,7 +254,7 @@ const ResetPasswordPage = () => {
               autoComplete={Platform.OS === "android" ? "sms-otp" : "one-time-code"}
               maxLength={OTP_LENGTH}
               placeholder="000000"
-              placeholderTextColor={tokens.colors.gray[300]}
+              placeholderTextColor={theme.colors.text.tertiary}
             />
 
             <PaperTextInput
@@ -239,9 +264,10 @@ const ResetPasswordPage = () => {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              textColor={theme.colors.text.primary}
               left={
                 <PaperTextInput.Icon
-                  icon={() => <Icon name="lock" size={20} color={tokens.colors.gray[500]} />}
+                  icon={() => <Icon name="lock" size={20} color={theme.colors.text.tertiary} />}
                 />
               }
               right={
@@ -254,19 +280,14 @@ const ResetPasswordPage = () => {
                       <Icon
                         name={showPassword ? "eye-slash" : "eye"}
                         size={20}
-                        color={tokens.colors.gray[500]}
+                        color={theme.colors.text.tertiary}
                       />
                     </TouchableOpacity>
                   )}
                 />
               }
               style={styles.paperInput}
-              theme={{
-                colors: {
-                  primary: tokens.colors.primary[500],
-                  background: "transparent",
-                },
-              }}
+              theme={paperTheme}
             />
 
             <PaperTextInput
@@ -276,18 +297,14 @@ const ResetPasswordPage = () => {
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
+              textColor={theme.colors.text.primary}
               left={
                 <PaperTextInput.Icon
-                  icon={() => <Icon name="lock" size={20} color={tokens.colors.gray[500]} />}
+                  icon={() => <Icon name="lock" size={20} color={theme.colors.text.tertiary} />}
                 />
               }
               style={styles.paperInput}
-              theme={{
-                colors: {
-                  primary: tokens.colors.primary[500],
-                  background: "transparent",
-                },
-              }}
+              theme={paperTheme}
             />
 
             <TouchableOpacity
@@ -296,7 +313,7 @@ const ResetPasswordPage = () => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={theme.colors.white} />
               ) : (
                 <Text style={styles.submitButtonText}>Update password</Text>
               )}
@@ -308,7 +325,7 @@ const ResetPasswordPage = () => {
               disabled={resending}
             >
               {resending ? (
-                <ActivityIndicator size="small" color={tokens.colors.primary[500]} />
+                <ActivityIndicator size="small" color={theme.colors.primary[500]} />
               ) : (
                 <Text style={styles.resendText}>Resend code</Text>
               )}

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/Button";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 interface ListFetchErrorProps {
@@ -17,13 +17,46 @@ export function ListFetchError({
   onRetry,
   retrying = false,
 }: ListFetchErrorProps) {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          minHeight: 280,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: theme.spacing[6],
+        },
+        card: { alignItems: "center", maxWidth: 320 },
+        title: {
+          fontSize: theme.typography.fontSize.xl,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.text.secondary,
+          marginTop: theme.spacing[4],
+          marginBottom: theme.spacing[2],
+          textAlign: "center",
+        },
+        message: {
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+          lineHeight: theme.typography.fontSize.base * 1.45,
+          marginBottom: theme.spacing[6],
+        },
+        button: { minWidth: 140 },
+      }),
+    [theme],
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Ionicons
           name="cloud-offline-outline"
           size={48}
-          color={DesignTokens.colors.text.tertiary}
+          color={theme.colors.text.tertiary}
         />
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
@@ -41,35 +74,3 @@ export function ListFetchError({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    minHeight: 280,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: DesignTokens.spacing[6],
-  },
-  card: {
-    alignItems: "center",
-    maxWidth: 320,
-  },
-  title: {
-    fontSize: DesignTokens.typography.fontSize.xl,
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    color: DesignTokens.colors.text.secondary,
-    marginTop: DesignTokens.spacing[4],
-    marginBottom: DesignTokens.spacing[2],
-    textAlign: "center",
-  },
-  message: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.tertiary,
-    textAlign: "center",
-    lineHeight: DesignTokens.typography.fontSize.base * 1.45,
-    marginBottom: DesignTokens.spacing[6],
-  },
-  button: {
-    minWidth: 140,
-  },
-});

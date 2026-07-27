@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TabView, SceneRendererProps, NavigationState } from 'react-native-tab-view';
-import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
-import { DesignTokens } from '@/constants/designTokens';
-
-const tokens = DesignTokens;
+import { StyleSheet, View, Text, Pressable, ScrollView, type LayoutChangeEvent } from 'react-native';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export interface TabRoute {
   key: string;
@@ -32,49 +31,155 @@ const CustomTabBar: React.FC<{
   jumpTo: (key: string) => void;
   distributeTabs?: boolean;
 }> = ({ navigationState, onIndexChange, jumpTo, distributeTabs = false }) => {
+  const theme = useThemeColors();
+  const scrollRef = useRef<ScrollView>(null);
+  const tabLayouts = useRef<Record<number, { x: number; width: number }>>({});
+  const [viewportWidth, setViewportWidth] = useState(0);
+
+  const scrollActiveTabIntoView = useCallback(
+    (animated: boolean) => {
+      if (distributeTabs) return;
+
+      const layout = tabLayouts.current[navigationState.index];
+      if (!layout || viewportWidth <= 0 || !scrollRef.current) return;
+
+      // Center the active tab in the viewport when possible
+      const targetX = Math.max(0, layout.x + layout.width / 2 - viewportWidth / 2);
+      scrollRef.current.scrollTo({ x: targetX, animated });
+    },
+    [distributeTabs, navigationState.index, viewportWidth],
+  );
+
+  useEffect(() => {
+    scrollActiveTabIntoView(true);
+  }, [scrollActiveTabIntoView]);
+
+  const handleViewportLayout = useCallback((event: LayoutChangeEvent) => {
+    setViewportWidth(event.nativeEvent.layout.width);
+  }, []);
+
+  const handleTabLayout = useCallback(
+    (index: number, event: LayoutChangeEvent) => {
+      const { x, width } = event.nativeEvent.layout;
+      tabLayouts.current[index] = { x, width };
+      if (index === navigationState.index) {
+        scrollActiveTabIntoView(false);
+      }
+    },
+    [navigationState.index, scrollActiveTabIntoView],
+  );
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        tabBarScroll: {
+          maxHeight: 52,
+          borderBottomColor: theme.colors.border.light,
+        },
+        tabBarRow: {
+          flexDirection: 'row',
+          maxHeight: 52,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        tabItem: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 100,
+          minHeight: 48,
+          width: 'auto',
+          borderBottomWidth: 2,
+          borderBottomColor: theme.colors.border.light,
+        },
+        tabItemDistributed: { flex: 1, minWidth: 0 },
+        tabItemActive: { borderBottomColor: theme.colors.primary[600] },
+        tabTouchable: {
+          width: '100%',
+          height: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        tabDisabled: { opacity: 0.4 },
+        tabLabel: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.secondary,
+          textAlign: 'center',
+          textTransform: 'uppercase',
+          letterSpacing: theme.typography.letterSpacing.wide,
+        },
+        tabLabelActive: {
+          color: theme.colors.primary[600],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        tabLabelDisabled: { color: theme.colors.gray[400] },
+        badge: {
+          position: 'absolute',
+          top: -4,
+          right: -8,
+          backgroundColor: theme.colors.primary[600],
+          borderRadius: theme.borderRadius.full,
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[1],
+          minWidth: 20,
+          height: 20,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        badgeText: {
+          fontSize: theme.typography.fontSize.xs,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.white,
+          textAlign: 'center',
+        },
+      }),
+    [theme],
+  );
+
   const tabItems = navigationState.routes.map((route, index) => {
     const isFocused = navigationState.index === index;
 
     return (
       <View
         key={route.key}
+        onLayout={(event) => handleTabLayout(index, event)}
         style={[
           styles.tabItem,
           distributeTabs && styles.tabItemDistributed,
           isFocused && styles.tabItemActive,
         ]}
       >
-            <Pressable
+        <Pressable
+          style={[styles.tabTouchable, route.disabled && styles.tabDisabled]}
+          onPress={() => {
+            if (!route.disabled) {
+              onIndexChange(index);
+              jumpTo(route.key);
+            }
+          }}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: isFocused }}
+          accessibilityLabel={route.title}
+        >
+          <View>
+            <Text
               style={[
-                styles.tabTouchable,
-                route.disabled && styles.tabDisabled,
+                styles.tabLabel,
+                isFocused && styles.tabLabelActive,
+                route.disabled && styles.tabLabelDisabled,
               ]}
-              onPress={() => {
-                if (!route.disabled) {
-                  onIndexChange(index);
-                  jumpTo(route.key);
-                }
-              }}
+              numberOfLines={1}
             >
-              <View style={styles.tabContent}>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    isFocused && styles.tabLabelActive,
-                    route.disabled && styles.tabLabelDisabled,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {route.title}
-                </Text>
-                {route.badge && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{route.badge}</Text>
-                  </View>
-                )}
+              {route.title}
+            </Text>
+            {route.badge ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{route.badge}</Text>
               </View>
-            </Pressable>
+            ) : null}
           </View>
+        </Pressable>
+      </View>
     );
   });
 
@@ -84,9 +189,11 @@ const CustomTabBar: React.FC<{
 
   return (
     <ScrollView
+      ref={scrollRef}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.tabBarScroll}
+      onLayout={handleViewportLayout}
     >
       {tabItems}
     </ScrollView>
@@ -105,14 +212,23 @@ export const TournamentTabView: React.FC<TournamentTabViewProps> = ({
   renderTabBar,
   distributeTabs = false,
 }) => {
+  const theme = useThemeColors();
+  const colorScheme = useColorScheme();
+
+  const renderThemedScene = useCallback(
+    (props: SceneRendererProps & { route: TabRoute }) => (
+      <View key={`${props.route.key}-${colorScheme}`} style={{ flex: 1 }}>
+        {renderScene(props)}
+      </View>
+    ),
+    [renderScene, colorScheme],
+  );
+
   return (
     <TabView
-      navigationState={{
-        index,
-        routes,
-      }}
+      navigationState={{ index, routes }}
       onIndexChange={onIndexChange}
-      renderScene={renderScene}
+      renderScene={renderThemedScene}
       renderTabBar={
         renderTabBar ||
         ((props) => (
@@ -128,85 +244,7 @@ export const TournamentTabView: React.FC<TournamentTabViewProps> = ({
       animationEnabled={animationEnabled}
       lazy={lazy}
       tabBarPosition={tabBarPosition}
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: theme.colors.background.primary }}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.white,
-  },
-  tabBarScroll: {
-    maxHeight: 40,
-    borderBottomColor: tokens.colors.border.light,
-  },
-  tabBarRow: {
-    flexDirection: 'row',
-    maxHeight: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border.light,
-  },
-  tabItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 100,
-    width: 'auto',
-    borderBottomWidth: 2,
-    borderBottomColor: tokens.colors.border.light,
-  },
-  tabItemDistributed: {
-    flex: 1,
-    minWidth: 0,
-  },
-  tabItemActive: {
-    borderBottomColor: tokens.colors.primary[600],
-  },
-  tabTouchable: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabDisabled: {
-    opacity: 0.4,
-  },
-  tabContent: {
-    
-  },
-  tabLabel: {
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: tokens.colors.text.secondary,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: tokens.typography.letterSpacing.wide,
-  },
-  tabLabelActive: {
-    color: tokens.colors.primary[600],
-    fontWeight: tokens.typography.fontWeight.semibold,
-  },
-  tabLabelDisabled: {
-    color: tokens.colors.gray[400],
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -8,
-    backgroundColor: tokens.colors.primary[600],
-    borderRadius: tokens.borderRadius.full,
-    paddingHorizontal: tokens.spacing[4],
-    paddingVertical: tokens.spacing[1],
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    fontSize: tokens.typography.fontSize.xs,
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.white,
-    textAlign: 'center',
-  },
-});

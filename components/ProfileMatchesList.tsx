@@ -134,9 +134,14 @@ export default function ProfileMatchesList({
                 <Text style={styles.matchTitle} numberOfLines={1}>
                   {formatMatchTypeLabel(match.matchType)}
                 </Text>
-                <Text style={styles.matchMeta}>
-                  {match.matchCategory === "team" ? "Team" : "Individual"}
-                  {match.city ? ` • ${match.city}` : ""}
+                <Text style={styles.matchMeta} numberOfLines={1}>
+                  {[
+                    match.matchCategory === "team" ? "Team" : "Individual",
+                    match.city,
+                    formatApiDateShort(match.createdAt) || null,
+                  ]
+                    .filter(Boolean)
+                    .join(" • ")}
                 </Text>
               </View>
               {result ? (
@@ -210,15 +215,6 @@ export default function ProfileMatchesList({
                   />
                 </View>
               </View>
-            </View>
-
-            <View style={styles.matchFooter}>
-              <Text style={styles.footerText}>
-                {formatApiDateShort(match.createdAt) || "—"}
-              </Text>
-              {scoreLabel ? (
-                <Text style={styles.footerRecord}>{scoreLabel} sets</Text>
-              ) : null}
             </View>
           </Card.Content>
         </Card>

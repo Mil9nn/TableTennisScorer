@@ -1,11 +1,203 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Card } from "@/components/ui/Card";
-import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 export function TournamentDetailSkeleton() {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        header: {
+          padding: Spacing.lg,
+        },
+        headerContent: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: Spacing.base,
+          marginBottom: Spacing.base,
+        },
+        headerLeft: {
+          gap: 6,
+          flex: 1,
+        },
+        headerRight: {
+          flexDirection: "row",
+          gap: Spacing.sm,
+        },
+        progressSection: {
+          marginTop: Spacing.md,
+        },
+        progressHeader: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: Spacing.sm,
+        },
+        content: {
+          backgroundColor: theme.colors.background.secondary,
+        },
+        infoGrid: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          padding: Spacing.base,
+          gap: Spacing.sm,
+        },
+        infoCard: {
+          flex: 1,
+          minWidth: "45%",
+          padding: Spacing.sm,
+        },
+        infoCardContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: Spacing.sm,
+        },
+        infoCardText: {
+          flex: 1,
+          gap: Spacing.xs,
+        },
+        ctaCard: {
+          margin: Spacing.base,
+          marginBottom: Spacing.base,
+          padding: Spacing.lg,
+          borderWidth: 2,
+          borderColor: theme.colors.primary[200],
+        },
+        ctaContent: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: Spacing.base,
+        },
+        ctaText: {
+          flex: 1,
+          gap: Spacing.sm,
+        },
+        tabsContainer: {
+          width: "100%",
+        },
+        tabsList: {
+          flexDirection: "row",
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        tabContent: {
+          padding: Spacing.base,
+          gap: Spacing.base,
+        },
+        groupsGrid: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: Spacing.base,
+        },
+        groupCard: {
+          flex: 1,
+          minWidth: "45%",
+          padding: Spacing.base,
+        },
+        groupCardContent: {
+          gap: Spacing.sm,
+        },
+        groupCardHeader: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        },
+        groupCardRows: {
+          gap: Spacing.xs,
+        },
+        groupCardRow: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+        },
+        tableCard: {
+          padding: Spacing.lg,
+        },
+        table: {
+          gap: Spacing.base,
+        },
+        tableHeader: {
+          flexDirection: "row",
+          gap: Spacing.base,
+          paddingBottom: Spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        tableRow: {
+          flexDirection: "row",
+          gap: Spacing.base,
+          paddingVertical: Spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+        scheduleList: {
+          gap: Spacing.base,
+        },
+        scheduleCard: {
+          padding: Spacing.base,
+          gap: Spacing.sm,
+        },
+        scheduleItems: {
+          gap: Spacing.xs,
+        },
+        scheduleItem: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: Spacing.sm,
+          borderRadius: BorderRadius.base,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+        },
+        participantsGrid: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: Spacing.sm,
+        },
+        participantCard: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: Spacing.sm,
+          padding: Spacing.sm,
+          borderRadius: BorderRadius.base,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.primary,
+          flex: 1,
+          minWidth: "45%",
+        },
+        participantInfo: {
+          flex: 1,
+          gap: 4,
+        },
+        infoRows: {
+          marginTop: Spacing.base,
+          gap: Spacing.sm,
+        },
+        infoRow: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingVertical: 4,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+        },
+      }),
+    [theme],
+  );
+
+  const headerBone = "rgba(255, 255, 255, 0.2)";
+
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
@@ -17,23 +209,23 @@ export function TournamentDetailSkeleton() {
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Skeleton width={256} height={28} borderRadius={4} style={styles.skeletonWhite} />
-            <Skeleton width={192} height={16} borderRadius={4} style={styles.skeletonWhite} />
+            <Skeleton width={256} height={28} borderRadius={4} color={headerBone} />
+            <Skeleton width={192} height={16} borderRadius={4} color={headerBone} />
           </View>
           <View style={styles.headerRight}>
-            <Skeleton width={128} height={32} borderRadius={4} style={styles.skeletonWhite} />
-            <Skeleton width={112} height={32} borderRadius={4} style={styles.skeletonWhite} />
-            <Skeleton width={96} height={32} borderRadius={4} style={styles.skeletonWhite} />
+            <Skeleton width={128} height={32} borderRadius={4} color={headerBone} />
+            <Skeleton width={112} height={32} borderRadius={4} color={headerBone} />
+            <Skeleton width={96} height={32} borderRadius={4} color={headerBone} />
           </View>
         </View>
 
         {/* Progress Bar */}
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
-            <Skeleton width={128} height={12} borderRadius={4} style={styles.skeletonWhite} />
-            <Skeleton width={80} height={12} borderRadius={4} style={styles.skeletonWhite} />
+            <Skeleton width={128} height={12} borderRadius={4} color={headerBone} />
+            <Skeleton width={80} height={12} borderRadius={4} color={headerBone} />
           </View>
-          <Skeleton width="100%" height={6} borderRadius={3} style={styles.skeletonWhite} />
+          <Skeleton width="100%" height={6} borderRadius={3} color={headerBone} />
         </View>
       </LinearGradient>
 
@@ -165,190 +357,4 @@ export function TournamentDetailSkeleton() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  header: {
-    padding: Spacing.lg,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: Spacing.base,
-    marginBottom: Spacing.base,
-  },
-  headerLeft: {
-    gap: 6,
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  skeletonWhite: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  progressSection: {
-    marginTop: Spacing.md,
-  },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: Spacing.sm,
-  },
-  content: {
-    backgroundColor: Colors.light.background,
-  },
-  infoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    padding: Spacing.base,
-    gap: Spacing.sm,
-  },
-  infoCard: {
-    flex: 1,
-    minWidth: "45%",
-    padding: Spacing.sm,
-  },
-  infoCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  infoCardText: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  ctaCard: {
-    margin: Spacing.base,
-    marginBottom: Spacing.base,
-    padding: Spacing.lg,
-    borderWidth: 2,
-    borderColor: "#bfdbfe",
-  },
-  ctaContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: Spacing.base,
-  },
-  ctaText: {
-    flex: 1,
-    gap: Spacing.sm,
-  },
-  tabsContainer: {
-    width: "100%",
-  },
-  tabsList: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  tabContent: {
-    padding: Spacing.base,
-    gap: Spacing.base,
-  },
-  groupsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.base,
-  },
-  groupCard: {
-    flex: 1,
-    minWidth: "45%",
-    padding: Spacing.base,
-  },
-  groupCardContent: {
-    gap: Spacing.sm,
-  },
-  groupCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  groupCardRows: {
-    gap: Spacing.xs,
-  },
-  groupCardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  tableCard: {
-    padding: Spacing.lg,
-  },
-  table: {
-    gap: Spacing.base,
-  },
-  tableHeader: {
-    flexDirection: "row",
-    gap: Spacing.base,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  tableRow: {
-    flexDirection: "row",
-    gap: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderLight,
-  },
-  scheduleList: {
-    gap: Spacing.base,
-  },
-  scheduleCard: {
-    padding: Spacing.base,
-    gap: Spacing.sm,
-  },
-  scheduleItems: {
-    gap: Spacing.xs,
-  },
-  scheduleItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.base,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  participantsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-  },
-  participantCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.base,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    backgroundColor: "#f8fafc",
-    flex: 1,
-    minWidth: "45%",
-  },
-  participantInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  infoRows: {
-    marginTop: Spacing.base,
-    gap: Spacing.sm,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.05)",
-  },
-});
 

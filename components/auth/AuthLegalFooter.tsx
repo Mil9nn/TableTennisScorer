@@ -1,7 +1,7 @@
 import { LEGAL_URLS } from "@/lib/legalUrls";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import * as WebBrowser from "expo-web-browser";
-import React from "react";
+import React, { useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type AuthLegalFooterProps = {
@@ -16,6 +16,41 @@ async function openLegalUrl(url: string) {
 }
 
 export function AuthLegalFooter({ showSignupConsent = false }: AuthLegalFooterProps) {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: {
+          marginTop: theme.spacing[8],
+          alignItems: "center",
+          gap: theme.spacing[4],
+        },
+        consent: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+          lineHeight: 20,
+          paddingHorizontal: theme.spacing[2],
+        },
+        linksRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+        link: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[500],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        dot: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+        },
+      }),
+    [theme],
+  );
+
   return (
     <View style={styles.wrap}>
       {showSignupConsent ? (
@@ -49,32 +84,3 @@ export function AuthLegalFooter({ showSignupConsent = false }: AuthLegalFooterPr
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    marginTop: DesignTokens.spacing[8],
-    alignItems: "center",
-    gap: DesignTokens.spacing[4],
-  },
-  consent: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    color: DesignTokens.colors.gray[500],
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: DesignTokens.spacing[2],
-  },
-  linksRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DesignTokens.spacing[2],
-  },
-  link: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    color: DesignTokens.colors.primary[500],
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-  },
-  dot: {
-    fontSize: DesignTokens.typography.fontSize.sm,
-    color: DesignTokens.colors.gray[400],
-  },
-});

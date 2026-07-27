@@ -116,7 +116,7 @@ export default function MatchStatsPage() {
         exportDisabled={!canExportPdf}
         exporting={exportingPdf}
       />
-      <MatchStatsTabContent data={statsData} />
+      <MatchStatsTabContent match={match} data={statsData} />
 
       <Modal visible={exportingPdf} transparent animationType="fade">
         <View style={styles.exportOverlay}>

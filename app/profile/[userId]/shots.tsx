@@ -49,8 +49,6 @@ export default function ProfileShotsScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Text variant="bodySmall">UserId: {resolvedUserId}</Text>
-
       {loading ? (
         <Text>Loading…</Text>
       ) : error ? (

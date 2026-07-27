@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useFocusEffect, useNavigation, type Href } from "expo-router";
 import {
   View,
@@ -16,8 +16,9 @@ import {
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { loginSchema } from "@/lib/validations/auth";
 import { AuthLegalFooter } from "@/components/auth/AuthLegalFooter";
 import Toast from "react-native-toast-message";
 
@@ -26,115 +27,104 @@ const LoginPage = () => {
   const navigation = useNavigation();
   const login = useAuthStore((state) => state.login);
   const authLoading = useAuthStore((state) => state.authLoading);
-  
-  const tokens = DesignTokens;
+  const theme = useThemeColors();
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: tokens.colors.primary[50],
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    loadingText: {
-      marginTop: tokens.spacing[8],
-      fontSize: tokens.typography.fontSize.base,
-      color: tokens.colors.gray[500],
-    },
-    keyboardAvoidingView: {
-      flex: 1,
-    },
-    scrollContainer: {
-      flex: 1,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      justifyContent: "center",
-      paddingHorizontal: tokens.spacing[8],
-    },
-    content: {
-      justifyContent: "center",
-    },
-    header: {
-      alignItems: "center",
-      marginBottom: tokens.spacing[16],
-    },
-    logoBox: {
-      width: 56,
-      height: 56,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    logoImage: {
-      width: "88%",
-      height: "88%",
-    },
-    brandName: {
-      fontSize: tokens.typography.fontSize.base,
-      fontWeight: tokens.typography.fontWeight.extrabold,
-      color: tokens.colors.gray[900],
-      letterSpacing: tokens.typography.letterSpacing.tight,
-      marginBottom: tokens.spacing[2],
-    },
-    subtitle: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-      textAlign: "center",
-    },
-    formCard: {
-      padding: tokens.spacing[6],
-    },
-    inputContainer: {
-      marginBottom: tokens.spacing[8],
-    },
-    paperInput: {
-      backgroundColor: tokens.colors.gray[50],
-      fontSize: tokens.typography.fontSize.sm,
-      height: 44,
-    },
-    eyeIcon: {
-      padding: tokens.spacing[4],
-    },
-    loginButton: {
-      backgroundColor: tokens.colors.primary[500],
-      paddingVertical: tokens.spacing[6],
-      borderRadius: tokens.borderRadius.sm,
-      alignItems: "center",
-    },
-    disabledButton: {
-      opacity: 0.7,
-    },
-    loginButtonText: {
-      color: tokens.colors.white,
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-    forgotPasswordButton: {
-      alignItems: "center",
-      marginTop: tokens.spacing[8],
-    },
-    forgotPasswordText: {
-      color: tokens.colors.primary[500],
-      fontSize: tokens.typography.fontSize.sm,
-    },
-    footer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    footerText: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-    },
-    registerLink: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.primary[500],
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-  });
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        loadingContainer: {
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        loadingText: {
+          marginTop: theme.spacing[8],
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.tertiary,
+        },
+        keyboardAvoidingView: { flex: 1 },
+        scrollContainer: { flex: 1 },
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: theme.spacing[8],
+        },
+        content: { justifyContent: "center" },
+        header: {
+          alignItems: "center",
+          marginBottom: theme.spacing[16],
+        },
+        logoBox: {
+          width: 56,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        logoImage: { width: "88%", height: "88%" },
+        brandName: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.extrabold,
+          color: theme.colors.text.primary,
+          letterSpacing: theme.typography.letterSpacing.tight,
+          marginBottom: theme.spacing[2],
+        },
+        subtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+        },
+        formCard: { padding: theme.spacing[6] },
+        inputContainer: { marginBottom: theme.spacing[8] },
+        paperInput: {
+          backgroundColor: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.sm,
+          height: 44,
+        },
+        eyeIcon: { padding: theme.spacing[4] },
+        loginButton: {
+          backgroundColor: theme.colors.primary[500],
+          paddingVertical: theme.spacing[6],
+          borderRadius: theme.borderRadius.sm,
+          alignItems: "center",
+          minHeight: 44,
+        },
+        disabledButton: { opacity: 0.7 },
+        loginButtonText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        forgotPasswordButton: {
+          alignItems: "center",
+          marginTop: theme.spacing[8],
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        forgotPasswordText: {
+          color: theme.colors.primary[500],
+          fontSize: theme.typography.fontSize.sm,
+        },
+        footer: {
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        footerText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+        },
+        registerLink: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[500],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+      }),
+    [theme],
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -169,16 +159,16 @@ const LoginPage = () => {
   });
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? "Please check your input";
+      Alert.alert("Error", firstError);
       return;
     }
 
-    // Temporarily disable password validation to test basic login
-
     setLoading(true);
     try {
-      await login({ email, password });
+      await login(parsed.data);
     } catch (error: any) {
       if (error?.response?.status === 403 && error?.response?.data?.requiresVerification) {
         const verifyEmail =
@@ -210,7 +200,7 @@ const LoginPage = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={tokens.colors.primary[500]} />
+          <ActivityIndicator size="large" color={theme.colors.primary[500]} />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </SafeAreaView>
@@ -233,7 +223,7 @@ const LoginPage = () => {
             styles.scrollContent,
             {
               paddingBottom:
-                tokens.spacing[8] +
+                theme.spacing[8] +
                 (Platform.OS === "ios" ? keyboardInset : 0),
             },
           ]}
@@ -261,12 +251,14 @@ const LoginPage = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              left={<PaperTextInput.Icon icon={() => <Icon name="email" size={20} color={tokens.colors.gray[500]} />} />}
+              left={<PaperTextInput.Icon icon={() => <Icon name="email" size={20} color={theme.colors.text.tertiary} />} />}
               style={styles.paperInput}
+              textColor={theme.colors.text.primary}
               theme={{
                 colors: {
-                  primary: tokens.colors.primary[500],
+                  primary: theme.colors.primary[500],
                   background: "transparent",
+                  onSurfaceVariant: theme.colors.text.tertiary,
                 }
               }}
             />
@@ -280,7 +272,7 @@ const LoginPage = () => {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              left={<PaperTextInput.Icon icon={() => <Icon name="lock" size={20} color={tokens.colors.gray[500]} />} />}
+              left={<PaperTextInput.Icon icon={() => <Icon name="lock" size={20} color={theme.colors.text.tertiary} />} />}
               right={
                 <PaperTextInput.Icon
                   icon={() => (
@@ -291,17 +283,19 @@ const LoginPage = () => {
                       <Icon
                         name={showPassword ? "eye-slash" : "eye"}
                         size={20}
-                        color={tokens.colors.gray[500]}
+                        color={theme.colors.text.tertiary}
                       />
                     </TouchableOpacity>
                   )}
                 />
               }
               style={styles.paperInput}
+              textColor={theme.colors.text.primary}
               theme={{
                 colors: {
-                  primary: tokens.colors.primary[500],
+                  primary: theme.colors.primary[500],
                   background: "transparent",
+                  onSurfaceVariant: theme.colors.text.tertiary,
                 }
               }}
             />
@@ -313,7 +307,7 @@ const LoginPage = () => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
+              <ActivityIndicator size="small" color={theme.colors.white} />
             ) : (
               <Text style={styles.loginButtonText}>Log In</Text>
             )}

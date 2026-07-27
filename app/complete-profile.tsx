@@ -1,13 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { axiosInstance } from "@/lib/axiosInstance";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,48 +23,193 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 const profileSchema = z.object({
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(["male", "female"], {
+  gender: z.enum(["male", "female", "other", "prefer_not_to_say"], {
     message: "Please select a gender",
   }),
-  handedness: z.enum(["left", "right"], {
+  handedness: z.enum(["left", "right", "ambidextrous"], {
     message: "Please select your handedness",
   }),
   phoneNumber: z.string().optional(),
   location: z.string().optional(),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
 });
+
+type FormValues = z.infer<typeof profileSchema>;
 
 const CompleteProfilePage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { fetchUser } = useAuthStore();
+  const theme = useThemeColors();
 
-  const form = useForm<z.infer<typeof profileSchema>>({
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safe: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        card: {
+          backgroundColor: theme.colors.background.primary,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: theme.colors.border.light,
+          overflow: "hidden",
+        },
+        header: {
+          backgroundColor: theme.colors.primary[500],
+          padding: theme.spacing[8],
+        },
+        headerRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: theme.spacing[4],
+        },
+        headerTitle: {
+          fontSize: theme.typography.fontSize["2xl"],
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.white,
+          marginBottom: theme.spacing[1],
+        },
+        headerSubtitle: {
+          color: "rgba(255,255,255,0.9)",
+          fontSize: theme.typography.fontSize.xs,
+        },
+        skipButton: {
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[2],
+          borderWidth: 1,
+          borderColor: "rgba(255,255,255,0.3)",
+          borderRadius: theme.borderRadius.full,
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        skipText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.xs,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+        progressLabel: {
+          fontSize: theme.typography.fontSize.xs,
+          color: "rgba(255,255,255,0.95)",
+          marginBottom: theme.spacing[1],
+        },
+        progressTrack: {
+          width: "100%",
+          height: 8,
+          backgroundColor: "rgba(255,255,255,0.3)",
+          borderRadius: theme.borderRadius.full,
+          overflow: "hidden",
+        },
+        progressFill: {
+          height: "100%",
+          backgroundColor: theme.colors.white,
+          borderRadius: theme.borderRadius.full,
+        },
+        form: {
+          padding: theme.spacing[8],
+          gap: theme.spacing[6],
+        },
+        field: {
+          marginBottom: theme.spacing[2],
+        },
+        fieldLabelRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+          marginBottom: 6,
+        },
+        fieldLabel: {
+          fontSize: theme.typography.fontSize.xs,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.secondary,
+        },
+        dateButton: {
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          borderRadius: theme.borderRadius.md,
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[3],
+          backgroundColor: theme.colors.background.primary,
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        dateText: {
+          fontSize: theme.typography.fontSize.base,
+          color: theme.colors.text.primary,
+        },
+        datePlaceholder: {
+          color: theme.colors.text.tertiary,
+        },
+        errorText: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.error,
+          marginTop: theme.spacing[1],
+        },
+        optionsRow: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: theme.spacing[2],
+          marginTop: theme.spacing[2],
+        },
+        option: {
+          paddingHorizontal: theme.spacing[4],
+          paddingVertical: theme.spacing[2],
+          borderRadius: theme.borderRadius.md,
+          borderWidth: 1,
+          borderColor: theme.colors.border.medium,
+          backgroundColor: theme.colors.background.primary,
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        optionSelected: {
+          backgroundColor: theme.colors.primary[500],
+          borderColor: theme.colors.primary[500],
+        },
+        optionText: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.secondary,
+        },
+        optionTextSelected: {
+          color: theme.colors.white,
+        },
+        submitRow: {
+          paddingTop: theme.spacing[4],
+        },
+        submitInner: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+        submitText: {
+          color: theme.colors.white,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+      }),
+    [theme],
+  );
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       dateOfBirth: "",
       phoneNumber: "",
       location: "",
-      bio: "",
     },
   });
 
-  // Progress bar calculation
-  const requiredFields = ["dateOfBirth", "gender", "handedness"];
-  type FormValues = z.infer<typeof profileSchema>;
+  const requiredFields = ["dateOfBirth", "gender", "handedness"] as const;
   const total = requiredFields.length;
   const watchedValues = form.watch();
 
   const completed = requiredFields.filter((field) => {
-    const value = watchedValues[field as keyof FormValues];
+    const value = watchedValues[field];
     return value !== undefined && value !== "" && value !== null;
   }).length;
 
   const progressPercent = (completed / total) * 100;
 
-  // Submit Handler
-  async function onSubmit(values: z.infer<typeof profileSchema>) {
+  async function onSubmit(values: FormValues) {
     setIsLoading(true);
     try {
       await axiosInstance.put("/auth/complete-profile", {
@@ -88,251 +240,198 @@ const CompleteProfilePage = () => {
   const selectedDate = dateOfBirth ? new Date(dateOfBirth) : new Date();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="max-w-3xl mx-auto w-full">
-          <View className="bg-white shadow-xl border border-gray-100 overflow-hidden">
-            {/* Header */}
-            <View className="bg-blue-400 p-8 border-b">
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-1">
-                  <Text className="text-2xl font-bold text-white mb-1">
-                    Complete Your Profile
-                  </Text>
-                  <Text className="text-white/90 text-xs">
-                    Just a few more details to get started
-                  </Text>
-                </View>
-
-                {/* Skip Button */}
-                <TouchableOpacity
-                  onPress={() => router.push("/(tabs)")}
-                  className="px-4 py-2 border border-white/30 rounded-full"
-                >
-                  <Text className="text-white text-xs font-medium">Skip</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Progress */}
-              <View className="mt-4">
-                <Text className="text-xs text-white/95 mb-1">
-                  {completed} out of {total} fields completed
+    <SafeAreaView style={styles.safe}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.header}>
+            <View style={styles.headerRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headerTitle}>Complete Your Profile</Text>
+                <Text style={styles.headerSubtitle}>
+                  Just a few more details to get started
                 </Text>
-                <View className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <View
-                    className="h-full bg-indigo-600 rounded-full"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </View>
               </View>
+
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)")}
+                style={styles.skipButton}
+              >
+                <Text style={styles.skipText}>Skip</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Form */}
-            <View className="p-8">
-              <View className="space-y-6">
-                <View className="flex-row flex-wrap gap-6">
-                  {/* Date of Birth */}
-                  <View className="flex-1 min-w-[48%]">
-                    <Controller
-                      control={form.control}
-                      name="dateOfBirth"
-                      render={({ field: { onChange, value } }) => (
-                        <View>
-                          <View className="flex-row items-center gap-2 mb-1.5">
-                            <Ionicons name="calendar" size={16} color="#6366f1" />
-                              <Text className="text-xs font-medium text-gray-700">
-                                Date of Birth
-                              </Text>
-                          </View>
-                          <TouchableOpacity
-                            onPress={() => setShowDatePicker(true)}
-                            className="border border-gray-200 rounded-md px-4 py-3"
-                          >
-                            <Text className="text-base text-gray-900">
-                              {value || "Select date"}
-                            </Text>
-                          </TouchableOpacity>
-                          {showDatePicker && (
-                            <DateTimePicker
-                              value={selectedDate}
-                              mode="date"
-                              display="default"
-                              maximumDate={new Date()}
-                              onChange={(event, selectedDate) => {
-                                setShowDatePicker(false);
-                                if (selectedDate) {
-                                  onChange(selectedDate.toISOString().split('T')[0]);
-                                }
-                              }}
-                            />
-                          )}
-                          {form.formState.errors.dateOfBirth && (
-                            <Text className="text-xs text-red-500 mt-1">
-                              {form.formState.errors.dateOfBirth.message}
-                            </Text>
-                          )}
-                        </View>
-                      )}
-                    />
-                  </View>
+            <View>
+              <Text style={styles.progressLabel}>
+                {completed} out of {total} fields completed
+              </Text>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+              </View>
+            </View>
+          </View>
 
-                  {/* Gender */}
-                  <View className="flex-1 min-w-[48%]">
-                    <Controller
-                      control={form.control}
-                      name="gender"
-                      render={({ field: { onChange, value } }) => (
-                        <View>
-                          <View className="flex-row items-center gap-2 mb-1.5">
-                            <Ionicons name="people" size={16} color="#6366f1" />
-                            <Text className="text-xs font-medium text-gray-700">
-                              Gender
-                            </Text>
-                          </View>
-                          <View className="flex-row gap-2 mt-2">
-                            {["male", "female"].map((option) => (
-                              <TouchableOpacity
-                                key={option}
-                                onPress={() => onChange(option)}
-                                className={`px-4 py-2 rounded-md border ${
-                                  value === option
-                                    ? "bg-blue-500 border-blue-500"
-                                    : "bg-white border-gray-300"
-                                }`}
-                              >
-                                <Text
-                                  className={`text-xs ${
-                                    value === option ? "text-white" : "text-gray-700"
-                                  }`}
-                                >
-                                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                                </Text>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                          {form.formState.errors.gender && (
-                            <Text className="text-xs text-red-500 mt-1">
-                              {form.formState.errors.gender.message}
-                            </Text>
-                          )}
-                        </View>
-                      )}
-                    />
+          <View style={styles.form}>
+            <Controller
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.field}>
+                  <View style={styles.fieldLabelRow}>
+                    <Ionicons name="calendar" size={16} color={theme.colors.primary[500]} />
+                    <Text style={styles.fieldLabel}>Date of Birth</Text>
                   </View>
-
-                  {/* Handedness */}
-                  <View className="flex-1 min-w-[48%]">
-                    <Controller
-                      control={form.control}
-                      name="handedness"
-                      render={({ field: { onChange, value } }) => (
-                        <View>
-                          <Text className="text-xs font-medium text-gray-700 mb-1.5">
-                            Playing Hand
-                          </Text>
-                          <View className="flex-row gap-2 mt-2">
-                            {["right", "left"].map((option) => (
-                              <TouchableOpacity
-                                key={option}
-                                onPress={() => onChange(option)}
-                                className={`px-4 py-2 rounded-md border ${
-                                  value === option
-                                    ? "bg-blue-500 border-blue-500"
-                                    : "bg-white border-gray-300"
-                                }`}
-                              >
-                                <Text
-                                  className={`text-xs ${
-                                    value === option ? "text-white" : "text-gray-700"
-                                  }`}
-                                >
-                                  {option === "right" ? "Right-handed" : "Left-handed"}
-                                </Text>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                          {form.formState.errors.handedness && (
-                            <Text className="text-xs text-red-500 mt-1">
-                              {form.formState.errors.handedness.message}
-                            </Text>
-                          )}
-                        </View>
-                      )}
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={styles.dateButton}
+                  >
+                    <Text style={[styles.dateText, !value && styles.datePlaceholder]}>
+                      {value || "Select date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker ? (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      onChange={(_, nextDate) => {
+                        setShowDatePicker(false);
+                        if (nextDate) {
+                          onChange(nextDate.toISOString().split("T")[0]);
+                        }
+                      }}
                     />
-                  </View>
-
-                  {/* Location */}
-                  <View className="flex-1 min-w-[48%]">
-                    <Controller
-                      control={form.control}
-                      name="location"
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <View>
-                          <View className="flex-row items-center gap-2 mb-1.5">
-                            <Ionicons name="location" size={16} color="#6366f1" />
-                            <Text className="text-xs font-medium text-gray-700">
-                              Location
-                            </Text>
-                          </View>
-                          <Input
-                            placeholder="City, Country"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            error={form.formState.errors.location?.message}
-                          />
-                        </View>
-                      )}
-                    />
-                  </View>
+                  ) : null}
+                  {form.formState.errors.dateOfBirth ? (
+                    <Text style={styles.errorText}>
+                      {form.formState.errors.dateOfBirth.message}
+                    </Text>
+                  ) : null}
                 </View>
+              )}
+            />
 
-                {/* Bio */}
-                <View>
-                  <Controller
-                    control={form.control}
-                    name="bio"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View>
-                        <Text className="text-xs font-medium text-gray-700 mb-1.5">
-                          Bio
-                        </Text>
-                        <Textarea
-                          placeholder="Tell us about yourself..."
-                          onBlur={onBlur}
-                          onChangeText={onChange}
-                          value={value}
-                          error={form.formState.errors.bio?.message}
-                          style={{ minHeight: 120 }}
-                        />
-                        <Text className="text-xs text-gray-500 mt-1">
-                          {value?.length || 0}/500 characters
-                        </Text>
-                      </View>
-                    )}
+            <Controller
+              control={form.control}
+              name="gender"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.field}>
+                  <View style={styles.fieldLabelRow}>
+                    <Ionicons name="people" size={16} color={theme.colors.primary[500]} />
+                    <Text style={styles.fieldLabel}>Gender</Text>
+                  </View>
+                  <View style={styles.optionsRow}>
+                    {[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                      { value: "other", label: "Other" },
+                      { value: "prefer_not_to_say", label: "Prefer not to say" },
+                    ].map((option) => {
+                      const selected = value === option.value;
+                      return (
+                        <TouchableOpacity
+                          key={option.value}
+                          onPress={() => onChange(option.value)}
+                          style={[styles.option, selected && styles.optionSelected]}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              selected && styles.optionTextSelected,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {form.formState.errors.gender ? (
+                    <Text style={styles.errorText}>
+                      {form.formState.errors.gender.message}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="handedness"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.field}>
+                  <Text style={[styles.fieldLabel, { marginBottom: 6 }]}>Playing Hand</Text>
+                  <View style={styles.optionsRow}>
+                    {[
+                      { value: "right", label: "Right-handed" },
+                      { value: "left", label: "Left-handed" },
+                      { value: "ambidextrous", label: "Ambidextrous" },
+                    ].map((option) => {
+                      const selected = value === option.value;
+                      return (
+                        <TouchableOpacity
+                          key={option.value}
+                          onPress={() => onChange(option.value)}
+                          style={[styles.option, selected && styles.optionSelected]}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              selected && styles.optionTextSelected,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {form.formState.errors.handedness ? (
+                    <Text style={styles.errorText}>
+                      {form.formState.errors.handedness.message}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="location"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.field}>
+                  <View style={styles.fieldLabelRow}>
+                    <Ionicons name="location" size={16} color={theme.colors.primary[500]} />
+                    <Text style={styles.fieldLabel}>Location</Text>
+                  </View>
+                  <Input
+                    placeholder="City, Country"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    error={form.formState.errors.location?.message}
                   />
                 </View>
+              )}
+            />
 
-                {/* Submit Button */}
-                <View className="pt-4">
-                  <Button
-                    onPress={form.handleSubmit(onSubmit)}
-                    disabled={isLoading}
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                  >
-                    {isLoading ? (
-                      <View className="flex-row items-center gap-2">
-                        <ActivityIndicator color="#fff" size="small" />
-                        <Text className="text-white font-medium">Completing Profile...</Text>
-                      </View>
-                    ) : (
-                      <Text className="text-white font-medium">Next</Text>
-                    )}
-                  </Button>
-                </View>
-              </View>
+            <View style={styles.submitRow}>
+              <Button
+                onPress={form.handleSubmit(onSubmit)}
+                disabled={isLoading}
+                variant="primary"
+                size="lg"
+                fullWidth
+              >
+                {isLoading ? (
+                  <View style={styles.submitInner}>
+                    <ActivityIndicator color={theme.colors.white} size="small" />
+                    <Text style={styles.submitText}>Completing Profile...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.submitText}>Next</Text>
+                )}
+              </Button>
             </View>
           </View>
         </View>
@@ -342,4 +441,3 @@ const CompleteProfilePage = () => {
 };
 
 export default CompleteProfilePage;
-

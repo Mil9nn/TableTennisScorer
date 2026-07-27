@@ -6,7 +6,6 @@ import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
-import { isProfileMatchWin } from "@/lib/profile/matchResult";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 function getMatchTimestamp(match: ProfileMatchHistoryItem) {
@@ -30,32 +29,20 @@ export default function ProfileMatchHistoryScreen() {
   }, [matches]);
 
   const overview = useMemo(() => {
-    let wins = 0;
-    let losses = 0;
     let individual = 0;
     let team = 0;
 
     for (const match of sortedMatches) {
       if (match.matchCategory === "team") team++;
       else individual++;
-
-      const result = isProfileMatchWin(match, resolvedUserId);
-      if (result === true) wins++;
-      else if (result === false) losses++;
     }
-
-    const decided = wins + losses;
-    const winRate = decided > 0 ? Math.round((wins / decided) * 100) : 0;
 
     return {
       total: sortedMatches.length,
-      wins,
-      losses,
-      winRate,
       individual,
       team,
     };
-  }, [sortedMatches, resolvedUserId]);
+  }, [sortedMatches]);
 
   const load = useCallback(async () => {
     if (!resolvedUserId) return;
@@ -110,32 +97,24 @@ export default function ProfileMatchHistoryScreen() {
         <Text style={styles.errorText}>{error}</Text>
       ) : (
         <>
-          <View style={styles.overviewGrid}>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>{overview.total}</Text>
-              <Text style={styles.overviewLabel}>Played</Text>
-            </View>
-            <View style={[styles.overviewCard, styles.overviewCardHighlight]}>
-              <Text
-                style={[styles.overviewValue, styles.overviewValueHighlight]}
-              >
-                {overview.wins}
-              </Text>
-              <Text style={styles.overviewLabel}>Won</Text>
-            </View>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>{overview.losses}</Text>
-              <Text style={styles.overviewLabel}>Lost</Text>
-            </View>
-            <View style={styles.overviewCard}>
-              <Text style={styles.overviewValue}>{overview.winRate}%</Text>
-              <Text style={styles.overviewLabel}>Win rate</Text>
-            </View>
+          <View style={styles.overviewBar}>
+            <Text style={styles.overviewStat}>
+              <Text style={styles.overviewStatValue}>{overview.total}</Text>
+              {overview.total === 1 ? " match" : " matches"}
+            </Text>
+            {overview.individual > 0 || overview.team > 0 ? (
+              <>
+                <Text style={styles.overviewDivider}>·</Text>
+                <Text style={styles.overviewStat}>
+                  {overview.individual > 0
+                    ? `${overview.individual} individual`
+                    : null}
+                  {overview.individual > 0 && overview.team > 0 ? " · " : null}
+                  {overview.team > 0 ? `${overview.team} team` : null}
+                </Text>
+              </>
+            ) : null}
           </View>
-
-          <Text style={styles.sectionTitle}>
-            Matches ({sortedMatches.length})
-          </Text>
 
           {sortedMatches.length === 0 ? (
             <View style={styles.emptyCard}>
@@ -183,45 +162,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: DesignTokens.spacing[8],
   },
-  overviewGrid: {
+  overviewBar: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: DesignTokens.spacing[2],
-  },
-  overviewCard: {
-    flexGrow: 1,
-    flexBasis: "47%",
-    backgroundColor: DesignTokens.colors.background.primary,
-    borderRadius: DesignTokens.borderRadius.sm,
-    padding: DesignTokens.spacing[4],
-    borderWidth: 1,
-    borderColor: DesignTokens.colors.border.light,
     alignItems: "center",
+    gap: DesignTokens.spacing[2],
+    paddingVertical: DesignTokens.spacing[2],
+    paddingHorizontal: DesignTokens.spacing[1],
   },
-  overviewCardHighlight: {
-    borderColor: "#86efac",
-    backgroundColor: "#f0fdf4",
-  },
-  overviewValue: {
-    fontSize: DesignTokens.typography.fontSize["2xl"],
-    fontWeight: DesignTokens.typography.fontWeight.bold,
-    color: DesignTokens.colors.text.primary,
-  },
-  overviewValueHighlight: {
-    color: "#15803d",
-  },
-  overviewLabel: {
-    marginTop: DesignTokens.spacing[1],
-    fontSize: DesignTokens.typography.fontSize.xs,
+  overviewStat: {
+    fontSize: DesignTokens.typography.fontSize.sm,
     color: DesignTokens.colors.text.tertiary,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
   },
-  sectionTitle: {
-    fontSize: DesignTokens.typography.fontSize.lg,
+  overviewStatValue: {
     fontWeight: DesignTokens.typography.fontWeight.semibold,
     color: DesignTokens.colors.text.secondary,
-    marginTop: DesignTokens.spacing[2],
+  },
+  overviewDivider: {
+    fontSize: DesignTokens.typography.fontSize.sm,
+    color: DesignTokens.colors.text.tertiary,
   },
   emptyCard: {
     alignItems: "center",

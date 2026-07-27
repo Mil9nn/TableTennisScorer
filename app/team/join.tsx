@@ -1,21 +1,26 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
-import { Colors, Spacing, Typography, Gradients } from "@/constants/theme";
 import { JoinCodeForm } from "@/components/tournaments/join-share/JoinCodeForm";
 import { JoinQrScannerModal } from "@/components/tournaments/join-share";
 import { useTeamJoin } from "@/hooks/useTeamJoin";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { isValidJoinCode, parseJoinCodeFromUrl } from "@/lib/teams/joinLinks";
 
 export default function JoinTeamPage() {
   const router = useRouter();
+  const theme = useThemeColors();
   const params = useLocalSearchParams<{ code?: string | string[] }>();
   const user = useAuthStore((state) => state.user);
   const { joinWithCode, loading } = useTeamJoin();
@@ -23,6 +28,90 @@ export default function JoinTeamPage() {
   const [joinCode, setJoinCode] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const autoJoinAttemptedRef = useRef(false);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: theme.colors.background.primary,
+        },
+        header: {
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.primary,
+        },
+        headerContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[6],
+          paddingHorizontal: theme.spacing[7],
+          height: 56,
+        },
+        backButton: {
+          padding: theme.spacing[3],
+          borderRadius: theme.borderRadius.sm,
+        },
+        headerTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        scrollContainer: {
+          flex: 1,
+        },
+        scrollContent: {
+          flexGrow: 1,
+          paddingBottom: theme.spacing[8],
+        },
+        section: {
+          paddingHorizontal: theme.spacing[7],
+          paddingTop: theme.spacing[5],
+        },
+        sectionTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[2],
+        },
+        sectionSubtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          marginBottom: theme.spacing[5],
+          lineHeight: theme.typography.fontSize.sm * 1.5,
+        },
+        signInHint: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.secondary,
+          textAlign: "center",
+          marginBottom: theme.spacing[4],
+        },
+        signInButton: {
+          marginTop: theme.spacing[2],
+          paddingVertical: theme.spacing[3],
+          alignItems: "center",
+        },
+        signInButtonText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[600],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        backLink: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: theme.spacing[2],
+          marginTop: theme.spacing[6],
+          paddingVertical: theme.spacing[3],
+        },
+        backLinkText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[600],
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+      }),
+    [theme],
+  );
 
   const codeFromLink = (() => {
     const raw = params.code;
@@ -117,42 +206,47 @@ export default function JoinTeamPage() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <LinearGradient
-        colors={Gradients.teams as [string, string, ...string[]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
-          style={styles.backButton}
-        >
-          <Icon name="arrow-left" library="material" size={20} color="#fff" />
-        </Pressable>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <View style={styles.header}>
         <View style={styles.headerContent}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+            style={styles.backButton}
+          >
+            <Icon name="chevron-left" size={20} color={theme.colors.text.primary} />
+          </Pressable>
           <Text style={styles.headerTitle}>Join team</Text>
-          <Text style={styles.headerSubtitle}>
-            Open an invite link, scan a QR code, or enter a code
-          </Text>
         </View>
-      </LinearGradient>
+      </View>
 
-      <View style={styles.content}>
-        <Card variant="elevated" style={styles.card}>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Enter join code</Text>
+          <Text style={styles.sectionSubtitle}>
+            Open an invite link, scan a QR code, or enter the code from your team captain.
+          </Text>
+
           {!user && codeFromLink ? (
             <Text style={styles.signInHint}>Sign in to join with code {codeFromLink}</Text>
           ) : null}
+
           <JoinCodeForm
             joinCode={joinCode}
             loading={loading}
             onChangeCode={setJoinCode}
             onSubmit={handleJoin}
             onScanPress={() => setScannerOpen(true)}
+            submitLabel="Join team"
           />
+
           {!user ? (
             <Pressable
               onPress={() => {
@@ -164,19 +258,19 @@ export default function JoinTeamPage() {
               <Text style={styles.signInButtonText}>Sign in to join</Text>
             </Pressable>
           ) : null}
-        </Card>
 
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push("/(tabs)/teams");
-          }}
-          style={styles.backLink}
-        >
-          <Icon name="arrow-left" library="material" size={16} color={Colors.light.primary} />
-          <Text style={styles.backLinkText}>Back to teams</Text>
-        </Pressable>
-      </View>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/(tabs)/teams");
+            }}
+            style={styles.backLink}
+          >
+            <Icon name="chevron-left" size={16} color={theme.colors.primary[600]} />
+            <Text style={styles.backLinkText}>Back to teams</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
 
       <JoinQrScannerModal
         visible={scannerOpen}
@@ -186,67 +280,3 @@ export default function JoinTeamPage() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  header: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.base,
-    paddingBottom: Spacing.lg,
-  },
-  backButton: {
-    marginBottom: Spacing.sm,
-  },
-  headerContent: {
-    marginTop: Spacing.xs,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#fff",
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.9)",
-  },
-  content: {
-    flex: 1,
-    padding: Spacing.base,
-  },
-  card: {
-    padding: Spacing.lg,
-  },
-  backLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.xs,
-    marginTop: Spacing.lg,
-    paddingVertical: Spacing.sm,
-  },
-  backLinkText: {
-    ...Typography.sm,
-    color: Colors.light.primary,
-    fontWeight: Typography.weights.medium,
-  },
-  signInHint: {
-    ...Typography.sm,
-    color: Colors.light.textSecondary,
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  signInButton: {
-    marginTop: Spacing.md,
-    paddingVertical: Spacing.sm,
-    alignItems: "center",
-  },
-  signInButtonText: {
-    ...Typography.sm,
-    color: Colors.light.primary,
-    fontWeight: Typography.weights.semibold,
-  },
-});

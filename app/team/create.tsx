@@ -1,7 +1,7 @@
 import { axiosInstance } from "@/lib/axiosInstance";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -16,7 +16,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useLocationSelection } from "@/hooks/useLocationSelection";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as z from "zod";
 import { Icon } from "@/components/ui/Icon";
@@ -25,6 +26,7 @@ import * as ImagePicker from "expo-image-picker";
 import UserSearchInput from "../match/components/UserSearchInput";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { FormTextField } from "@/components/ui/FormTextField";
+import { LocationSelectRow } from "@/components/location/LocationSelectRow";
 import { Avatar } from "@/components/ui/Avatar";
 
 const teamSchema = z.object({
@@ -33,6 +35,7 @@ const teamSchema = z.object({
     .min(3, "Team name must be at least 3 characters")
     .max(100, "Team name is too long"),
   captain: z.string().min(1, "Captain is required"),
+  cityId: z.string().optional(),
   city: z.string().optional(),
   players: z.array(z.string()),
 });
@@ -46,9 +49,258 @@ type User = {
   profileImage?: string;
 };
 
-const tokens = DesignTokens;
-
 const CreateTeamPage = () => {
+  const theme = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: theme.colors.background.primary,
+        },
+        header: {
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.primary,
+        },
+        headerContent: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[6],
+          paddingHorizontal: theme.spacing[7],
+          height: 56,
+        },
+        backButton: {
+          padding: theme.spacing[3],
+          borderRadius: theme.borderRadius.sm,
+        },
+        headerTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        keyboardAvoidingView: {
+          flex: 1,
+        },
+        scrollContainer: {
+          flex: 1,
+        },
+        scrollContent: {
+          flexGrow: 1,
+        },
+        section: {
+          paddingHorizontal: theme.spacing[7],
+          paddingVertical: theme.spacing[3],
+        },
+        sectionTitle: {
+          fontSize: theme.typography.fontSize.lg,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing[3],
+        },
+        sectionSubtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          marginBottom: theme.spacing[4],
+        },
+        fieldLabel: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        fieldHint: {
+          marginTop: theme.spacing[1],
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+        },
+        logoRow: {
+          marginTop: theme.spacing[4],
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[4],
+        },
+        logoPreviewWrap: {
+          position: "relative",
+          width: 64,
+          height: 64,
+        },
+        logoPreview: {
+          width: 64,
+          height: 64,
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+          borderRadius: theme.borderRadius.lg,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        removeLogoButton: {
+          position: "absolute",
+          right: -6,
+          top: -6,
+          width: 20,
+          height: 20,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: theme.borderRadius.full,
+          backgroundColor: theme.colors.text.primary,
+        },
+        uploadButton: {
+          height: 48,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: theme.spacing[2],
+          borderRadius: theme.borderRadius.full,
+          backgroundColor: theme.colors.text.primary,
+        },
+        uploadButtonText: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.white,
+        },
+        formFieldGap: {
+          marginBottom: theme.spacing[3],
+        },
+        captainCard: {
+          marginBottom: theme.spacing[4],
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+          borderRadius: theme.borderRadius.md,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.primary,
+          padding: theme.spacing[3],
+        },
+        captainName: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.text.primary,
+        },
+        captainMeta: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+        },
+        captainBadge: {
+          color: theme.colors.info,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+        searchLabel: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          marginBottom: theme.spacing[2],
+        },
+        errorText: {
+          marginTop: theme.spacing[2],
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.error,
+        },
+        rosterList: {
+          marginTop: theme.spacing[4],
+          gap: theme.spacing[2],
+        },
+        rosterCard: {
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderRadius: theme.borderRadius.md,
+          borderWidth: 1,
+          borderColor: theme.colors.border.light,
+          backgroundColor: theme.colors.background.primary,
+          padding: theme.spacing[3],
+        },
+        rosterCardLeft: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+          flex: 1,
+          minWidth: 0,
+        },
+        rosterIndex: {
+          width: 28,
+          height: 28,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: theme.borderRadius.full,
+          backgroundColor: theme.colors.primary[50],
+        },
+        rosterIndexText: {
+          fontSize: theme.typography.fontSize.xs,
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.primary[700],
+        },
+        rosterName: {
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.primary,
+        },
+        rosterUsername: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+        },
+        removePlayerButton: {
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: theme.scheme === "dark" ? "rgba(248,113,113,0.15)" : "#FEF2F2",
+          padding: theme.spacing[2],
+        },
+        emptyRoster: {
+          marginTop: theme.spacing[4],
+          alignItems: "center",
+          borderRadius: theme.borderRadius.md,
+          borderWidth: 1,
+          borderStyle: "dashed",
+          borderColor: theme.colors.border.medium,
+          paddingVertical: theme.spacing[8],
+        },
+        emptyRosterText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          paddingHorizontal: theme.spacing[7],
+          textAlign: "center",
+        },
+        rosterFooter: {
+          marginTop: theme.spacing[4],
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+        rosterCount: {
+          fontSize: theme.typography.fontSize.xs,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.secondary,
+        },
+        rosterHint: {
+          fontSize: theme.typography.fontSize.xs,
+          color: theme.colors.text.tertiary,
+        },
+        submitSection: {
+          paddingHorizontal: theme.spacing[7],
+          paddingTop: theme.spacing[4],
+        },
+        submitButton: {
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "row",
+          height: theme.spacing[14],
+          borderRadius: theme.borderRadius.sm,
+          backgroundColor: theme.colors.background.buttons.lightBlue,
+        },
+        submitButtonText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.medium,
+        },
+        submitRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[2],
+        },
+      }),
+    [theme],
+  );
+
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [teammates, setTeammates] = useState<User[]>([]);
@@ -82,7 +334,11 @@ const CreateTeamPage = () => {
     formState: { errors },
   } = useForm<TeamCreateFormValues>({
     resolver: zodResolver(teamSchema),
-    defaultValues: { name: "", captain: "", city: "", players: [] },
+    defaultValues: { name: "", captain: "", cityId: "", city: "", players: [] },
+  });
+
+  const { city, openCityPicker, cityLabel } = useLocationSelection({
+    clearVenueOnCityChange: false,
   });
 
   useEffect(() => {
@@ -90,6 +346,11 @@ const CreateTeamPage = () => {
       setValue("captain", user._id);
     }
   }, [user, setValue]);
+
+  useEffect(() => {
+    setValue("cityId", city?._id ?? "");
+    setValue("city", city?.name ?? "");
+  }, [city, setValue]);
 
   useEffect(() => {
     setValue(
@@ -160,13 +421,17 @@ const CreateTeamPage = () => {
 
     setIsSubmitting(true);
     try {
-      const cityTrim = data.city?.trim() ?? "";
+      const cityId = data.cityId?.trim() || city?._id || "";
+      const cityName = data.city?.trim() || city?.name || "";
 
       if (teamImage) {
         const formData = new FormData();
         formData.append("name", data.name.trim());
-        if (cityTrim.length >= 2) {
-          formData.append("city", cityTrim);
+        if (cityId) {
+          formData.append("cityId", cityId);
+        }
+        if (cityName.length >= 2) {
+          formData.append("city", cityName);
         }
         formData.append("captain", data.captain);
         formData.append("players", JSON.stringify(rosterIds));
@@ -197,7 +462,8 @@ const CreateTeamPage = () => {
             name: data.name.trim(),
             captain: data.captain,
             players: rosterIds,
-            ...(cityTrim.length >= 2 ? { city: cityTrim } : {}),
+            ...(cityId ? { cityId } : {}),
+            ...(cityName.length >= 2 ? { city: cityName } : {}),
           },
           { headers: { "Content-Type": "application/json" } },
         );
@@ -230,7 +496,7 @@ const CreateTeamPage = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Icon name="chevron-left" size={20} color="#0f172a" />
+            <Icon name="chevron-left" size={20} color={theme.colors.text.primary} />
           </Pressable>
           <Text style={styles.headerTitle}>Create team</Text>
         </View>
@@ -253,26 +519,18 @@ const CreateTeamPage = () => {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <View className="px-4 py-3">
-            <Text className="text-lg font-semibold text-slate-950 mb-3">
-              Branding
-            </Text>
-            <Text className="text-sm text-slate-500 mb-4">
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Branding</Text>
+            <Text style={styles.sectionSubtitle}>
               Add a team logo; you can change it later from team settings.
             </Text>
-            <View className="flex-row items-center gap-4">
-              <View className="flex-1 min-w-0">
-                <Text className="text-sm font-semibold text-slate-900">
-                  Team logo
-                </Text>
-
-                <Text className="mt-1 text-xs text-slate-500">
-                  PNG or JPG, max 5MB
-                </Text>
-
-                <View className="mt-4 flex-row items-center gap-4">
-                  <View className="relative h-16 w-16">
-                    <View className="h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+            <View style={{ flexDirection: "row", alignItems: "center", gap: theme.spacing[4] }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.fieldLabel}>Team logo</Text>
+                <Text style={styles.fieldHint}>PNG or JPG, max 5MB</Text>
+                <View style={styles.logoRow}>
+                  <View style={styles.logoPreviewWrap}>
+                    <View style={styles.logoPreview}>
                       {imagePreview ? (
                         <Image
                           source={{ uri: imagePreview }}
@@ -280,27 +538,19 @@ const CreateTeamPage = () => {
                           contentFit="cover"
                         />
                       ) : (
-                        <Icon name="image" size={24} color="#94a3b8" />
+                        <Icon name="image" size={24} color={theme.colors.text.tertiary} />
                       )}
                     </View>
                     {imagePreview ? (
-                      <Pressable
-                        onPress={removeImage}
-                        hitSlop={8}
-                        className="absolute -right-1.5 -top-1.5 h-5 w-5 items-center justify-center rounded-full bg-slate-900 active:opacity-90"
-                      >
-                        <Icon name="close" size={11} color="white" />
+                      <Pressable onPress={removeImage} hitSlop={8} style={styles.removeLogoButton}>
+                        <Icon name="close" size={11} color={theme.colors.white} />
                       </Pressable>
                     ) : null}
                   </View>
-
-                  <View className="flex-1">
-                    <Pressable
-                      onPress={pickImage}
-                      className="h-12 flex-row items-center justify-center gap-2 rounded-full bg-slate-900 active:opacity-90"
-                    >
-                      <Icon name="image" size={16} color="white" />
-                      <Text className="text-sm font-semibold text-white">
+                  <View style={{ flex: 1 }}>
+                    <Pressable onPress={pickImage} style={styles.uploadButton}>
+                      <Icon name="image" size={16} color={theme.colors.white} />
+                      <Text style={styles.uploadButtonText}>
                         {imagePreview ? "Change logo" : "Upload logo"}
                       </Text>
                     </Pressable>
@@ -310,11 +560,9 @@ const CreateTeamPage = () => {
             </View>
           </View>
 
-          <View className="px-4 py-3">
-            <Text className="text-lg font-semibold text-slate-950 mb-3">
-              Team details
-            </Text>
-            <View className="mb-3">
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Team details</Text>
+            <View style={styles.formFieldGap}>
               <Controller
                 control={control}
                 name="name"
@@ -331,51 +579,40 @@ const CreateTeamPage = () => {
               />
             </View>
             <View>
-              <Controller
-                control={control}
-                name="city"
-                render={({ field: { onChange, value } }) => (
-                  <FormTextField
-                    label="City (optional)"
-                    placeholder="City"
-                    value={value}
-                    onChangeText={onChange}
-                  />
-                )}
+              <LocationSelectRow
+                label="City (optional)"
+                value={cityLabel}
+                placeholder="Search city…"
+                onPress={openCityPicker}
               />
             </View>
           </View>
 
-          <View className="px-4 py-3">
-            <Text className="text-lg font-semibold text-slate-950 mb-3">
-              Roster
-            </Text>
-            <Text className="text-sm text-slate-500 mb-4">
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Roster</Text>
+            <Text style={styles.sectionSubtitle}>
               You are captain. Teammates are optional now — invite players later
               with a team code.
             </Text>
 
             {user && (
-              <View className="mb-4 flex-row items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
-                <View className="h-9 w-9 items-center justify-center rounded-full">
+              <View style={styles.captainCard}>
+                <View style={{ height: 36, width: 36, alignItems: "center", justifyContent: "center" }}>
                   <Avatar size={40} src={user.profileImage} />
                 </View>
-                <View className="flex-1 min-w-0">
-                  <Text
-                    className="text-sm font-semibold text-slate-900"
-                    numberOfLines={1}
-                  >
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.captainName} numberOfLines={1}>
                     {user.fullName || user.username}
                   </Text>
-                  <Text className="text-xs text-slate-500" numberOfLines={1}>
+                  <Text style={styles.captainMeta} numberOfLines={1}>
                     @{user.username} ·{" "}
-                    <Text className="text-blue-500 font-medium">Captain</Text>
+                    <Text style={styles.captainBadge}>Captain</Text>
                   </Text>
                 </View>
               </View>
             )}
 
-            <Text className="text-sm text-slate-500 mb-2">Find players</Text>
+            <Text style={styles.searchLabel}>Find players</Text>
             <Controller
               control={control}
               name="players"
@@ -388,35 +625,22 @@ const CreateTeamPage = () => {
               )}
             />
             {errors.players ? (
-              <Text className="mt-2 text-xs text-red-600">
-                {errors.players.message}
-              </Text>
+              <Text style={styles.errorText}>{errors.players.message}</Text>
             ) : null}
 
             {teammates.length > 0 ? (
-              <View className="mt-4 gap-2">
+              <View style={styles.rosterList}>
                 {teammates.map((p, idx) => (
-                  <View
-                    key={p._id}
-                    className="flex-row items-center justify-between rounded-xl border border-gray-200 bg-white p-3"
-                  >
-                    <View className="flex-row items-center gap-3 flex-1 min-w-0">
-                      <View className="h-7 w-7 items-center justify-center rounded-full bg-indigo-50">
-                        <Text className="text-xs font-bold text-indigo-700">
-                          {idx + 1}
-                        </Text>
+                  <View key={p._id} style={styles.rosterCard}>
+                    <View style={styles.rosterCardLeft}>
+                      <View style={styles.rosterIndex}>
+                        <Text style={styles.rosterIndexText}>{idx + 1}</Text>
                       </View>
-                      <View className="flex-1 min-w-0">
-                        <Text
-                          className="text-sm font-medium text-slate-900"
-                          numberOfLines={1}
-                        >
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.rosterName} numberOfLines={1}>
                           {p.fullName || p.username}
                         </Text>
-                        <Text
-                          className="text-xs text-slate-500"
-                          numberOfLines={1}
-                        >
+                        <Text style={styles.rosterUsername} numberOfLines={1}>
                           @{p.username}
                         </Text>
                       </View>
@@ -424,48 +648,42 @@ const CreateTeamPage = () => {
                     <Pressable
                       onPress={() => removePlayer(p._id)}
                       hitSlop={10}
-                      className="rounded-lg bg-red-50 p-2 active:opacity-80"
+                      style={styles.removePlayerButton}
                     >
-                      <Icon name="close" size={15} color="#b91c1c" />
+                      <Icon name="close" size={15} color={theme.colors.error} />
                     </Pressable>
                   </View>
                 ))}
               </View>
             ) : (
-              <View className="mt-4 items-center rounded-xl border border-dashed border-gray-300 py-8">
-                <Text className="text-sm text-slate-500 px-4 text-center">
+              <View style={styles.emptyRoster}>
+                <Text style={styles.emptyRosterText}>
                   Search to add teammates to your roster.
                 </Text>
               </View>
             )}
 
-            <View className="mt-4 flex-row items-center justify-between">
-              <Text className="text-xs font-medium text-slate-600">
+            <View style={styles.rosterFooter}>
+              <Text style={styles.rosterCount}>
                 {rosterCount} player{rosterCount === 1 ? "" : "s"} in roster
               </Text>
-              <Text className="text-xs text-slate-400">
-                Captain counts as 1
-              </Text>
+              <Text style={styles.rosterHint}>Captain counts as 1</Text>
             </View>
           </View>
 
-          <View className="px-4 pt-4">
+          <View style={styles.submitSection}>
             <Pressable
               onPress={handleSubmit(onSubmit)}
               disabled={isSubmitting}
               style={styles.submitButton}
             >
               {isSubmitting ? (
-                <View className="flex-row items-center gap-2">
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text className="text-white text-sm font-medium">
-                    Creating team
-                  </Text>
+                <View style={styles.submitRow}>
+                  <ActivityIndicator size="small" color={theme.colors.white} />
+                  <Text style={styles.submitButtonText}>Creating team</Text>
                 </View>
               ) : (
-                <Text className="text-white text-sm font-medium">
-                  Create team
-                </Text>
+                <Text style={styles.submitButtonText}>Create team</Text>
               )}
             </Pressable>
           </View>
@@ -474,53 +692,5 @@ const CreateTeamPage = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    height: 56,
-  },
-  backButton: {
-    padding: 6,
-    borderRadius: 6,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#0f172a",
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  submitButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-    height: tokens.spacing[14],
-    borderRadius: tokens.borderRadius.sm,
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-    backgroundColor: tokens.colors.background.buttons.lightBlue,
-    color: tokens.colors.text.primary,
-  },
-});
 
 export default CreateTeamPage;

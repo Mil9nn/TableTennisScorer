@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axiosInstance";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef, useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,10 +15,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Image } from "expo-image";
-import { DesignTokens } from "@/constants/designTokens";
 import { FormTextField } from "@/components/ui/FormTextField";
-
-const tokens = DesignTokens;
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 interface User {
   _id: string;
@@ -56,9 +54,11 @@ function avatarInitial(username: string): string {
 function SearchUserAvatar({
   user,
   size = 36,
+  theme,
 }: {
   user: Pick<User, "username" | "profileImage">;
   size?: number;
+  theme: ReturnType<typeof useThemeColors>;
 }) {
   const [failed, setFailed] = useState(false);
   const uri = resolveProfileImageUri(user.profileImage);
@@ -66,10 +66,13 @@ function SearchUserAvatar({
 
   return (
     <View
-      style={[
-        styles.avatarWrap,
-        { width: size, height: size, borderRadius: size / 2 },
-      ]}
+      style={{
+        overflow: "hidden",
+        backgroundColor: theme.colors.gray[100],
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+      }}
     >
       {showImage ? (
         <Image
@@ -82,12 +85,22 @@ function SearchUserAvatar({
         />
       ) : (
         <View
-          style={[
-            styles.avatarFallback,
-            { width: size, height: size, borderRadius: size / 2 },
-          ]}
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.primary[100],
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+          }}
         >
-          <Text style={[styles.avatarInitial, { fontSize: size * 0.38 }]}>
+          <Text
+            style={{
+              fontWeight: theme.typography.fontWeight.bold,
+              color: theme.colors.primary[800],
+              fontSize: size * 0.38,
+            }}
+          >
             {avatarInitial(user.username)}
           </Text>
         </View>
@@ -101,6 +114,97 @@ export default function UserSearchInput({
   onSelect,
   clearAfterSelect = false,
 }: UserSearchInputProps) {
+  const theme = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: { width: "100%", position: "relative" },
+        inputContainer: { width: "100%", position: "relative" },
+        inputRow: {
+          position: "relative",
+          width: "100%",
+        },
+        fieldContainer: {
+          width: "100%",
+        },
+        inputWithTrailing: {
+          paddingRight: theme.spacing[8],
+        },
+        inputTrailing: {
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          justifyContent: "center",
+          alignItems: "center",
+          minWidth: theme.spacing[8],
+        },
+        muted: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.gray[500],
+          marginTop: theme.spacing[1],
+        },
+        mutedSmall: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.gray[400],
+          marginTop: theme.spacing[2],
+        },
+        row: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+          padding: theme.spacing[4],
+          marginBottom: theme.spacing[2],
+        },
+        dropdown: {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          backgroundColor: theme.colors.background.primary,
+          elevation: 2,
+          zIndex: 1000,
+          maxHeight: 300,
+        },
+        dropdownBottom: {
+          top: "100%",
+          marginTop: theme.spacing[2],
+        },
+        dropdownTop: {
+          bottom: "100%",
+        },
+        scrollView: {
+          maxHeight: 300,
+          flex: 1,
+        },
+        rowTextCol: {
+          flex: 1,
+          minWidth: 0,
+        },
+        primaryText: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.medium,
+          color: theme.colors.text.primary,
+        },
+        selectedRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: theme.spacing[3],
+          paddingVertical: theme.spacing[1],
+        },
+        selectedTextCol: {
+          flex: 1,
+          minWidth: 0,
+        },
+        clearHit: { paddingVertical: theme.spacing[1] },
+        clearText: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.primary[600],
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+      }),
+    [theme],
+  );
+
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -206,7 +310,7 @@ export default function UserSearchInput({
     return (
       <View style={styles.wrap}>
         <View style={styles.selectedRow}>
-          <SearchUserAvatar user={selectedUser} size={36} />
+          <SearchUserAvatar user={selectedUser} size={36} theme={theme} />
           <View style={styles.selectedTextCol}>
             <Text style={styles.primaryText} numberOfLines={1}>
               {selectedUser.fullName || selectedUser.username}
@@ -251,7 +355,7 @@ export default function UserSearchInput({
             <View style={styles.inputTrailing} pointerEvents="none">
               <ActivityIndicator
                 size="small"
-                color={tokens.colors.text.tertiary}
+                color={theme.colors.text.tertiary}
               />
             </View>
           )}
@@ -280,7 +384,7 @@ export default function UserSearchInput({
                       style={styles.row}
                       activeOpacity={0.7}
                     >
-                      <SearchUserAvatar user={u} size={36} />
+                      <SearchUserAvatar user={u} size={36} theme={theme} />
                       <View style={styles.rowTextCol}>
                         <Text style={styles.primaryText} numberOfLines={1}>
                           {label}
@@ -298,101 +402,3 @@ export default function UserSearchInput({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { width: "100%", position: "relative" },
-  inputContainer: { width: "100%", position: "relative" },
-  inputRow: {
-    position: "relative",
-    width: "100%",
-  },
-  fieldContainer: {
-    width: "100%",
-  },
-  inputWithTrailing: {
-    paddingRight: tokens.spacing[8],
-  },
-  inputTrailing: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: tokens.spacing[8],
-  },
-  muted: {
-    fontSize: tokens.typography.fontSize.sm,
-    color: tokens.colors.gray[500],
-    marginTop: tokens.spacing[1],
-  },
-  mutedSmall: {
-    fontSize: tokens.typography.fontSize.sm,
-    color: tokens.colors.gray[400],
-    marginTop: tokens.spacing[2],
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing[3],
-    padding: tokens.spacing[4],
-    marginBottom: tokens.spacing[2],
-  },
-  dropdown: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    backgroundColor: tokens.colors.background.primary,
-    elevation: 2,
-    zIndex: 1000,
-    maxHeight: 300,
-  },
-  dropdownBottom: {
-    top: '100%',
-    marginTop: tokens.spacing[2],
-  },
-  dropdownTop: {
-    bottom: '100%',
-  },
-  scrollView: {
-    maxHeight: 300,
-    flex: 1,
-  },
-  rowTextCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  primaryText: {
-    fontSize: tokens.typography.fontSize.base,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: tokens.colors.gray[900],
-  },
-  selectedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing[3],
-    paddingVertical: tokens.spacing[1],
-  },
-  selectedTextCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  clearHit: { paddingVertical: tokens.spacing[1] },
-  clearText: { 
-    fontSize: tokens.typography.fontSize.sm, 
-    color: tokens.colors.primary[600], 
-    fontWeight: tokens.typography.fontWeight.semibold 
-  },
-  avatarWrap: {
-    overflow: "hidden",
-    backgroundColor: tokens.colors.gray[100],
-  },
-  avatarFallback: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: tokens.colors.primary[100],
-  },
-  avatarInitial: {
-    fontWeight: tokens.typography.fontWeight.bold,
-    color: tokens.colors.primary[800],
-  },
-});

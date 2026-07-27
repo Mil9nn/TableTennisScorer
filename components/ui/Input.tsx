@@ -1,6 +1,16 @@
-import React from 'react';
-import { View, TextInput, Text, StyleSheet, ViewStyle, TextInputProps, TextStyle, StyleProp } from 'react-native';
-import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import React, { useMemo } from "react";
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextInputProps,
+  TextStyle,
+  StyleProp,
+} from "react-native";
+import { Spacing, Typography } from "@/constants/theme";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -21,11 +31,65 @@ export const Input: React.FC<InputProps> = ({
   style,
   ...props
 }) => {
+  const theme = useThemeColors();
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          marginBottom: Spacing.base,
+        },
+        label: {
+          ...Typography.sm,
+          fontWeight: Typography.weights.medium,
+          color: theme.colors.text.primary,
+          marginBottom: Spacing.xs,
+        },
+        inputContainer: {
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: theme.colors.background.primary,
+          borderWidth: 1.5,
+          borderColor: theme.colors.border.light,
+          borderRadius: 12,
+          paddingHorizontal: Spacing.base,
+          minHeight: 44,
+        },
+        inputError: {
+          borderColor: theme.colors.error,
+        },
+        input: {
+          flex: 1,
+          ...Typography.base,
+          color: theme.colors.text.primary,
+          paddingVertical: Spacing.sm,
+        },
+        inputWithLeftIcon: {
+          paddingLeft: Spacing.sm,
+        },
+        inputWithRightIcon: {
+          paddingRight: Spacing.sm,
+        },
+        leftIcon: {
+          marginRight: Spacing.xs,
+        },
+        rightIcon: {
+          marginLeft: Spacing.xs,
+        },
+        error: {
+          ...Typography.xs,
+          color: theme.colors.error,
+          marginTop: Spacing.xs,
+        },
+      }),
+    [theme],
+  );
+
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputContainer, error && styles.inputError]}>
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={[styles.inputContainer, error ? styles.inputError : null]}>
+        {leftIcon ? <View style={styles.leftIcon}>{leftIcon}</View> : null}
         <TextInput
           style={[
             styles.input,
@@ -34,61 +98,12 @@ export const Input: React.FC<InputProps> = ({
             inputStyle,
             style,
           ]}
-          placeholderTextColor={Colors.light.textTertiary}
+          placeholderTextColor={theme.colors.text.tertiary}
           {...props}
         />
-        {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
+        {rightIcon ? <View style={styles.rightIcon}>{rightIcon}</View> : null}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: Spacing.base,
-  },
-  label: {
-    ...Typography.sm,
-    fontWeight: Typography.weights.medium,
-    color: Colors.light.text,
-    marginBottom: Spacing.xs,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.background,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    borderRadius: 12, // rounded-xl
-    paddingHorizontal: Spacing.base,
-    minHeight: 44,
-  },
-  inputError: {
-    borderColor: Colors.light.error,
-  },
-  input: {
-    flex: 1,
-    ...Typography.base,
-    color: Colors.light.text,
-    paddingVertical: Spacing.sm,
-  },
-  inputWithLeftIcon: {
-    paddingLeft: Spacing.sm,
-  },
-  inputWithRightIcon: {
-    paddingRight: Spacing.sm,
-  },
-  leftIcon: {
-    marginRight: Spacing.xs,
-  },
-  rightIcon: {
-    marginLeft: Spacing.xs,
-  },
-  error: {
-    ...Typography.xs,
-    color: Colors.light.error,
-    marginTop: Spacing.xs,
-  },
-});
-

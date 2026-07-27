@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ProfileCompletionCheck from "@/components/ProfileCompletionCheck";
 import NavigationGuard from "@/components/NavigationGuard";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -44,6 +45,7 @@ export default function RootLayout() {
                 <Stack.Screen name="team" options={{ headerShown: false }} />
                 <Stack.Screen name="tournaments" options={{ headerShown: false }} />
                 <Stack.Screen name="leaderboard" options={{ headerShown: false }} />
+                <Stack.Screen name="challenges" options={{ headerShown: false }} />
                 <Stack.Screen name="profile" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="account-deletion"
@@ -51,13 +53,18 @@ export default function RootLayout() {
                 />
                 <Stack.Screen name="settings" options={{ headerShown: false }} />
                 <Stack.Screen
+                  name="location"
+                  options={{ headerShown: false, presentation: "modal" }}
+                />
+                <Stack.Screen
                   name="modal"
                   options={{ presentation: "modal", title: "Modal" }}
                 />
               </Stack>
               <NavigationGuard />
               <ProfileCompletionCheck />
-              <StatusBar style="auto" />
+              <OfflineBanner />
+              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
               <Toast />
             </ThemeProvider>
           </PaperProvider>

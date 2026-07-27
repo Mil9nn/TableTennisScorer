@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, useFocusEffect, useNavigation, type Href } from "expo-router";
 import {
   View,
@@ -9,13 +9,12 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
 } from "react-native";
 import { TextInput as PaperTextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/Icon";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { AuthLegalFooter } from "@/components/auth/AuthLegalFooter";
 import {
   passwordResetErrorMessage,
@@ -27,73 +26,83 @@ import Toast from "react-native-toast-message";
 const ForgotPasswordPage = () => {
   const router = useRouter();
   const navigation = useNavigation();
-  const tokens = DesignTokens;
+  const theme = useThemeColors();
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: tokens.colors.primary[50],
-    },
-    keyboardAvoidingView: { flex: 1 },
-    scrollContent: {
-      flexGrow: 1,
-      justifyContent: "center",
-      paddingHorizontal: tokens.spacing[8],
-      paddingVertical: tokens.spacing[8],
-    },
-    header: {
-      alignItems: "center",
-      marginBottom: tokens.spacing[12],
-    },
-    logoBox: {
-      width: 56,
-      height: 56,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    logoImage: { width: "88%", height: "88%" },
-    brandName: {
-      fontSize: tokens.typography.fontSize.base,
-      fontWeight: tokens.typography.fontWeight.extrabold,
-      color: tokens.colors.gray[900],
-      letterSpacing: tokens.typography.letterSpacing.tight,
-      marginBottom: tokens.spacing[2],
-    },
-    subtitle: {
-      fontSize: tokens.typography.fontSize.sm,
-      color: tokens.colors.gray[500],
-      textAlign: "center",
-      lineHeight: 20,
-    },
-    formCard: { padding: tokens.spacing[6] },
-    inputContainer: { marginBottom: tokens.spacing[8] },
-    paperInput: {
-      backgroundColor: tokens.colors.gray[50],
-      fontSize: tokens.typography.fontSize.sm,
-      height: 44,
-    },
-    submitButton: {
-      backgroundColor: tokens.colors.primary[500],
-      paddingVertical: tokens.spacing[6],
-      borderRadius: tokens.borderRadius.sm,
-      alignItems: "center",
-    },
-    disabledButton: { opacity: 0.7 },
-    submitButtonText: {
-      color: tokens.colors.white,
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-    backButton: { alignItems: "center", marginTop: tokens.spacing[8] },
-    backText: {
-      color: tokens.colors.primary[500],
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.semibold,
-    },
-  });
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background.secondary,
+        },
+        keyboardAvoidingView: { flex: 1 },
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: theme.spacing[8],
+          paddingVertical: theme.spacing[8],
+        },
+        header: {
+          alignItems: "center",
+          marginBottom: theme.spacing[12],
+        },
+        logoBox: {
+          width: 56,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        logoImage: { width: "88%", height: "88%" },
+        brandName: {
+          fontSize: theme.typography.fontSize.base,
+          fontWeight: theme.typography.fontWeight.extrabold,
+          color: theme.colors.text.primary,
+          letterSpacing: theme.typography.letterSpacing.tight,
+          marginBottom: theme.spacing[2],
+        },
+        subtitle: {
+          fontSize: theme.typography.fontSize.sm,
+          color: theme.colors.text.tertiary,
+          textAlign: "center",
+          lineHeight: 20,
+        },
+        formCard: { padding: theme.spacing[6] },
+        inputContainer: { marginBottom: theme.spacing[8] },
+        paperInput: {
+          backgroundColor: theme.colors.background.primary,
+          fontSize: theme.typography.fontSize.sm,
+          height: 44,
+        },
+        submitButton: {
+          backgroundColor: theme.colors.primary[500],
+          paddingVertical: theme.spacing[6],
+          borderRadius: theme.borderRadius.sm,
+          alignItems: "center",
+          minHeight: 44,
+        },
+        disabledButton: { opacity: 0.7 },
+        submitButtonText: {
+          color: theme.colors.white,
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+        backButton: {
+          alignItems: "center",
+          marginTop: theme.spacing[8],
+          minHeight: 44,
+          justifyContent: "center",
+        },
+        backText: {
+          color: theme.colors.primary[500],
+          fontSize: theme.typography.fontSize.sm,
+          fontWeight: theme.typography.fontWeight.semibold,
+        },
+      }),
+    [theme],
+  );
 
   useFocusEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -166,16 +175,18 @@ const ForgotPasswordPage = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                textColor={theme.colors.text.primary}
                 left={
                   <PaperTextInput.Icon
-                    icon={() => <Icon name="email" size={20} color={tokens.colors.gray[500]} />}
+                    icon={() => <Icon name="email" size={20} color={theme.colors.text.tertiary} />}
                   />
                 }
                 style={styles.paperInput}
                 theme={{
                   colors: {
-                    primary: tokens.colors.primary[500],
+                    primary: theme.colors.primary[500],
                     background: "transparent",
+                    onSurfaceVariant: theme.colors.text.tertiary,
                   },
                 }}
               />
@@ -187,7 +198,7 @@ const ForgotPasswordPage = () => {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={theme.colors.white} />
               ) : (
                 <Text style={styles.submitButtonText}>Send reset code</Text>
               )}

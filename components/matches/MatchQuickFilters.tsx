@@ -29,12 +29,15 @@ if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-type FilterPanel = "type" | "status" | "date" | null;
+type FilterPanel = "format" | "date" | "sort" | null;
+
+export type MatchFeedTab = "singles" | "doubles" | "team";
 
 export interface MatchQuickFilterValues {
   type: string;
   format: string;
   status: string;
+  sort: string;
   datePreset: string;
   dateFrom: string;
   dateTo: string;
@@ -46,28 +49,27 @@ interface ChipOption {
 }
 
 interface MatchQuickFiltersProps {
-  tab: "individual" | "team";
+  /** Feed tab — format chips only apply on the Teams tab. */
+  tab: MatchFeedTab;
   filters: MatchQuickFilterValues;
   onFiltersChange: (updates: Partial<MatchQuickFilterValues>) => void;
 }
 
-const STATUS_CHIPS: ChipOption[] = [
-  { label: "All", value: "" },
+const STATUS_QUICK_CHIPS: ChipOption[] = [
   { label: "Live", value: "in_progress" },
-  { label: "Scheduled", value: "scheduled" },
+  { label: "Upcoming", value: "scheduled" },
   { label: "Completed", value: "completed" },
-];
-
-const INDIVIDUAL_TYPE_CHIPS: ChipOption[] = [
-  { label: "All", value: "" },
-  { label: "Singles", value: "singles" },
-  { label: "Doubles", value: "doubles" },
 ];
 
 const TEAM_FORMAT_CHIPS: ChipOption[] = [
   { label: "All", value: "" },
   { label: "Swaythling", value: "five_singles" },
   { label: "S-D-S", value: "single_double_single" },
+];
+
+const SORT_CHIPS: ChipOption[] = [
+  { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
 ];
 
 const FEED_DATE_RANGE_CHIPS: { label: string; value: DateRangePresetId | "all" }[] = [
@@ -92,7 +94,7 @@ function animateRowChange() {
 
 function isFeedDateChipSelected(
   value: DateRangePresetId | "all",
-  f: Pick<MatchQuickFilterValues, "datePreset" | "dateFrom" | "dateTo">
+  f: Pick<MatchQuickFilterValues, "datePreset" | "dateFrom" | "dateTo">,
 ): boolean {
   if (value === "all") {
     return !f.dateFrom?.trim() && !f.dateTo?.trim();
@@ -102,25 +104,38 @@ function isFeedDateChipSelected(
 
 function getActiveDateLabel(filters: MatchQuickFilterValues): string | null {
   const match = FEED_DATE_RANGE_CHIPS.find((chip) =>
-    isFeedDateChipSelected(chip.value, filters)
+    isFeedDateChipSelected(chip.value, filters),
   );
   if (!match || match.value === "all") return null;
   return match.label;
 }
 
+function getSortLabel(sort: string): string | null {
+  if (!sort || sort === "newest") return null;
+  return SORT_CHIPS.find((c) => c.value === sort)?.label ?? null;
+}
+
+function getFormatLabel(value: string): string | null {
+  if (!value) return null;
+  return TEAM_FORMAT_CHIPS.find((c) => c.value === value)?.label ?? null;
+}
+
+function getStatusLabel(status: string): string | null {
+  if (!status) return null;
+  return STATUS_QUICK_CHIPS.find((c) => c.value === status)?.label ?? null;
+}
+
 export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickFiltersProps) {
   const [activePanel, setActivePanel] = useState<FilterPanel>(null);
+  const isTeamTab = tab === "team";
 
   useEffect(() => {
     setActivePanel(null);
   }, [tab]);
 
-  const typeValue = tab === "individual" ? filters.type : filters.format;
-  const typeOptions = tab === "individual" ? INDIVIDUAL_TYPE_CHIPS : TEAM_FORMAT_CHIPS;
-
-  const hasTypeFilter = Boolean(typeValue);
-  const hasStatusFilter = Boolean(filters.status);
+  const hasFormatFilter = isTeamTab && Boolean(filters.format);
   const hasDateFilter = Boolean(getActiveDateLabel(filters));
+  const hasSortFilter = Boolean(getSortLabel(filters.sort));
 
   const openPanel = useCallback((panel: FilterPanel) => {
     animateRowChange();
@@ -133,39 +148,88 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
       animateRowChange();
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       if (clearValue) {
-        if (panel === "type") {
-          onFiltersChange(tab === "individual" ? { type: "" } : { format: "" });
-        } else if (panel === "status") {
-          onFiltersChange({ status: "" });
+        if (panel === "format") {
+          onFiltersChange({ format: "" });
+        } else if (panel === "sort") {
+          onFiltersChange({ sort: "newest" });
         } else {
           onFiltersChange({ datePreset: "", dateFrom: "", dateTo: "" });
         }
       }
       setActivePanel(null);
     },
-    [onFiltersChange, tab]
+    [onFiltersChange],
   );
 
-  const hubCategories = useMemo(
-    () =>
-      [
-        { id: "type" as const, label: "Type", isActive: hasTypeFilter },
-        { id: "status" as const, label: "Status", isActive: hasStatusFilter },
-        { id: "date" as const, label: "Date", isActive: hasDateFilter },
-      ] satisfies {
-        id: Exclude<FilterPanel, null>;
-        label: string;
-        isActive: boolean;
-      }[],
-    [hasDateFilter, hasStatusFilter, hasTypeFilter]
+  const setStatus = useCallback(
+    (value: string) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onFiltersChange({ status: filters.status === value ? "" : value });
+    },
+    [filters.status, onFiltersChange],
   );
+
+  const hubCategories = useMemo(() => {
+    const items: {
+      id: Exclude<FilterPanel, null>;
+      label: string;
+      isActive: boolean;
+    }[] = [];
+    if (isTeamTab) {
+      items.push({ id: "format", label: "Format", isActive: hasFormatFilter });
+    }
+    items.push(
+      { id: "date", label: "Date", isActive: hasDateFilter },
+      { id: "sort", label: "Sort", isActive: hasSortFilter },
+    );
+    return items;
+  }, [hasDateFilter, hasFormatFilter, hasSortFilter, isTeamTab]);
+
+  const summaryChips = useMemo(() => {
+    const chips: { key: string; label: string; onClear: () => void }[] = [];
+    const statusLabel = getStatusLabel(filters.status);
+    if (statusLabel) {
+      chips.push({
+        key: "status",
+        label: statusLabel,
+        onClear: () => onFiltersChange({ status: "" }),
+      });
+    }
+    if (isTeamTab) {
+      const formatLabel = getFormatLabel(filters.format);
+      if (formatLabel) {
+        chips.push({
+          key: "format",
+          label: formatLabel,
+          onClear: () => onFiltersChange({ format: "" }),
+        });
+      }
+    }
+    const dateLabel = getActiveDateLabel(filters);
+    if (dateLabel) {
+      chips.push({
+        key: "date",
+        label: dateLabel,
+        onClear: () => onFiltersChange({ datePreset: "", dateFrom: "", dateTo: "" }),
+      });
+    }
+    const sortLabel = getSortLabel(filters.sort);
+    if (sortLabel) {
+      chips.push({
+        key: "sort",
+        label: sortLabel,
+        onClear: () => onFiltersChange({ sort: "newest" }),
+      });
+    }
+    return chips;
+  }, [filters, isTeamTab, onFiltersChange]);
 
   const renderAnchorPill = (panel: Exclude<FilterPanel, null>, label: string) => (
     <View style={[styles.pillWithClear, styles.pillSelected]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Close ${label} filter`}
-        hitSlop={8}
+        hitSlop={12}
         onPress={() => dismissPanel(panel)}
         style={styles.clearBtn}
       >
@@ -182,7 +246,7 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Clear ${category.label} filter`}
-            hitSlop={8}
+            hitSlop={12}
             onPress={() => dismissPanel(category.id)}
             style={styles.clearBtn}
           >
@@ -192,6 +256,7 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
             accessibilityRole="button"
             onPress={() => openPanel(category.id)}
             style={({ pressed }) => [styles.pillLabelHit, pressed && styles.pressed]}
+            hitSlop={8}
           >
             <Text style={[styles.pillText, styles.pillTextSelected]} numberOfLines={1}>
               {category.label}
@@ -219,7 +284,7 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
     label: string,
     selected: boolean,
     onPress: () => void,
-    tone: "default" | "live" = "default"
+    tone: "default" | "live" = "default",
   ) => (
     <ChoiceChip
       key={key}
@@ -245,36 +310,33 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
     if (!activePanel) return null;
 
     const panelLabel =
-      activePanel === "type" ? "Type" : activePanel === "status" ? "Status" : "Date";
+      activePanel === "format" ? "Format" : activePanel === "sort" ? "Sort" : "Date";
 
     let options: React.ReactNode = null;
 
-    if (activePanel === "type") {
-      options = typeOptions.map((chip) =>
+    if (activePanel === "format") {
+      options = TEAM_FORMAT_CHIPS.map((chip) =>
         renderOptionChip(
-          `type-${chip.value || "all"}`,
+          `format-${chip.value || "all"}`,
           chip.label,
-          typeValue === chip.value,
+          filters.format === chip.value,
           () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onFiltersChange(
-              tab === "individual" ? { type: chip.value } : { format: chip.value }
-            );
-          }
-        )
-      );
-    } else if (activePanel === "status") {
-      options = STATUS_CHIPS.map((chip) =>
-        renderOptionChip(
-          `status-${chip.value || "all"}`,
-          chip.label,
-          filters.status === chip.value,
-          () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onFiltersChange({ status: chip.value });
+            onFiltersChange({ format: chip.value });
           },
-          chip.value === "in_progress" ? "live" : "default"
-        )
+        ),
+      );
+    } else if (activePanel === "sort") {
+      options = SORT_CHIPS.map((chip) =>
+        renderOptionChip(
+          `sort-${chip.value}`,
+          chip.label,
+          (filters.sort || "newest") === chip.value,
+          () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onFiltersChange({ sort: chip.value });
+          },
+        ),
       );
     } else {
       options = FEED_DATE_RANGE_CHIPS.map((chip) =>
@@ -285,8 +347,8 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
           () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onFiltersChange(buildDateFilterFromPreset(chip.value));
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -305,18 +367,65 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
 
   return (
     <View style={styles.container}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.row}
+      >
+        {STATUS_QUICK_CHIPS.map((chip) => {
+          const selected = filters.status === chip.value;
+          const isLive = chip.value === "in_progress";
+          return renderOptionChip(
+            `quick-${chip.value}`,
+            chip.label,
+            selected,
+            () => setStatus(chip.value),
+            isLive ? "live" : "default",
+          );
+        })}
+      </ScrollView>
+
       {activePanel ? (
-        renderPanelRow()
+        <View style={styles.panelWrap}>{renderPanelRow()}</View>
       ) : (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.row}
+          contentContainerStyle={[styles.row, styles.hubRow]}
         >
           {hubCategories.map(renderHubPill)}
         </ScrollView>
       )}
+
+      {summaryChips.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.row, styles.summaryRow]}
+        >
+          <Text style={styles.summaryPrefix}>Showing</Text>
+          {summaryChips.map((chip) => (
+            <View key={chip.key} style={styles.summaryChip}>
+              <Text style={styles.summaryChipText}>{chip.label}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${chip.label} filter`}
+                hitSlop={10}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  chip.onClear();
+                }}
+                style={styles.summaryClear}
+              >
+                <Ionicons name="close" size={12} color={t.colors.text.secondary} />
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      ) : null}
     </View>
   );
 }
@@ -324,6 +433,17 @@ export function MatchQuickFilters({ tab, filters, onFiltersChange }: MatchQuickF
 const styles = StyleSheet.create({
   container: {
     marginTop: t.spacing[3],
+    gap: t.spacing[2],
+  },
+  panelWrap: {
+    marginTop: 0,
+  },
+  hubRow: {
+    marginTop: 0,
+  },
+  summaryRow: {
+    alignItems: "center",
+    paddingTop: t.spacing[1],
   },
   row: {
     flexDirection: "row",
@@ -332,10 +452,10 @@ const styles = StyleSheet.create({
   },
   pill: {
     flexShrink: 0,
-    height: 32,
-    minHeight: 32,
+    height: 28,
+    minHeight: 28,
     marginRight: t.spacing[2],
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 0,
     borderColor: t.colors.border.medium,
     backgroundColor: t.colors.white,
@@ -343,21 +463,21 @@ const styles = StyleSheet.create({
   pillActiveFill: {
     backgroundColor: t.colors.primary[600],
     borderColor: t.colors.primary[600],
-    ...t.shadows.base,
+    ...t.shadows.sm,
   },
   pillLiveFill: {
     backgroundColor: t.colors.status.live,
     borderColor: t.colors.status.live,
-    ...t.shadows.base,
+    ...t.shadows.sm,
   },
   pillWithClear: {
     flexShrink: 0,
     flexDirection: "row",
     alignItems: "center",
-    height: 32,
+    height: 28,
     marginRight: t.spacing[2],
-    paddingLeft: 4,
-    paddingRight: 12,
+    paddingLeft: 3,
+    paddingRight: 10,
     borderRadius: t.borderRadius.full,
     borderWidth: 1,
     borderColor: t.colors.border.medium,
@@ -367,14 +487,14 @@ const styles = StyleSheet.create({
     borderColor: t.colors.info,
   },
   pillLabelHit: {
-    paddingVertical: 2,
+    paddingVertical: 1,
     paddingRight: 2,
   },
   pillText: {
-    fontSize: t.typography.fontSize.base,
+    fontSize: t.typography.fontSize.sm,
     fontWeight: t.typography.fontWeight.semibold,
     color: t.colors.text.secondary,
-    letterSpacing: t.typography.letterSpacing.wide,
+    letterSpacing: t.typography.letterSpacing.normal,
   },
   pillTextActiveFill: {
     color: t.colors.white,
@@ -391,11 +511,41 @@ const styles = StyleSheet.create({
   clearBtn: {
     width: 20,
     height: 20,
-    marginRight: 3,
+    marginRight: 2,
     borderRadius: t.borderRadius.full,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: t.colors.primary[50],
+  },
+  summaryPrefix: {
+    fontSize: t.typography.fontSize.xs,
+    fontWeight: t.typography.fontWeight.medium,
+    color: t.colors.text.tertiary,
+    marginRight: t.spacing[2],
+  },
+  summaryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    height: 24,
+    marginRight: t.spacing[2],
+    paddingLeft: 8,
+    paddingRight: 4,
+    borderRadius: t.borderRadius.full,
+    backgroundColor: t.colors.background.secondary,
+    borderWidth: 1,
+    borderColor: t.colors.border.light,
+  },
+  summaryChipText: {
+    fontSize: t.typography.fontSize.xs,
+    fontWeight: t.typography.fontWeight.semibold,
+    color: t.colors.text.secondary,
+  },
+  summaryClear: {
+    width: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressed: {
     opacity: 0.88,

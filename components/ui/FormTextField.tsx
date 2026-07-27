@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef, useMemo, useState } from "react";
 import {
   StyleProp,
   StyleSheet,
@@ -9,7 +9,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { DesignTokens } from "@/constants/designTokens";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 export interface FormTextFieldProps extends TextInputProps {
   label?: string;
@@ -33,13 +33,51 @@ export const FormTextField = forwardRef<TextInput, FormTextFieldProps>(
       autoCorrect = false,
       autoCapitalize = "words",
       underlineColorAndroid = "transparent",
-      placeholderTextColor = DesignTokens.colors.text.tertiary,
+      placeholderTextColor,
       ...props
     },
     ref
   ) {
+    const theme = useThemeColors();
     const [focused, setFocused] = useState(false);
     const hasError = Boolean(error);
+
+    const styles = useMemo(
+      () =>
+        StyleSheet.create({
+          label: {
+            fontSize: theme.typography.fontSize.base,
+            fontWeight: theme.typography.fontWeight.semibold,
+            color: theme.colors.text.secondary,
+            marginBottom: theme.spacing[2],
+          },
+          input: {
+            minHeight: 48,
+            paddingHorizontal: theme.spacing[3],
+            paddingVertical: theme.spacing[2],
+            borderTopLeftRadius: theme.borderRadius.sm,
+            borderTopRightRadius: theme.borderRadius.sm,
+            borderBottomWidth: 1,
+            borderColor: theme.colors.border.medium,
+            backgroundColor: theme.colors.background.secondary,
+            fontSize: theme.typography.fontSize.base,
+            color: theme.colors.text.primary,
+          },
+          inputFocused: {
+            borderColor: theme.colors.info,
+            borderBottomWidth: 2,
+          },
+          inputError: {
+            borderColor: theme.colors.error,
+          },
+          errorText: {
+            fontSize: theme.typography.fontSize.base,
+            color: theme.colors.error,
+            marginTop: theme.spacing[2],
+          },
+        }),
+      [theme],
+    );
 
     const handleFocus: TextInputProps["onFocus"] = (e) => {
       setFocused(true);
@@ -59,7 +97,7 @@ export const FormTextField = forwardRef<TextInput, FormTextFieldProps>(
           autoCorrect={autoCorrect}
           autoCapitalize={autoCapitalize}
           underlineColorAndroid={underlineColorAndroid}
-          placeholderTextColor={placeholderTextColor}
+          placeholderTextColor={placeholderTextColor ?? theme.colors.text.tertiary}
           onFocus={handleFocus}
           onBlur={handleBlur}
           style={[
@@ -76,36 +114,3 @@ export const FormTextField = forwardRef<TextInput, FormTextFieldProps>(
     );
   }
 );
-
-const styles = StyleSheet.create({
-  label: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    fontWeight: DesignTokens.typography.fontWeight.semibold,
-    color: DesignTokens.colors.text.secondary,
-    marginBottom: DesignTokens.spacing[2],
-  },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: DesignTokens.spacing[3],
-    paddingVertical: DesignTokens.spacing[2],
-    borderTopLeftRadius: DesignTokens.borderRadius.sm,
-    borderTopRightRadius: DesignTokens.borderRadius.sm,
-    borderBottomWidth: 1,
-    borderColor: DesignTokens.colors.border.medium,
-    backgroundColor: DesignTokens.colors.background.secondary,
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.text.primary,
-  },
-  inputFocused: {
-    borderColor: DesignTokens.colors.info,
-    borderBottomWidth: 2,
-  },
-  inputError: {
-    borderColor: DesignTokens.colors.error,
-  },
-  errorText: {
-    fontSize: DesignTokens.typography.fontSize.base,
-    color: DesignTokens.colors.error,
-    marginTop: DesignTokens.spacing[2],
-  },
-});

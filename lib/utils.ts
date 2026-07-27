@@ -29,6 +29,9 @@ export function formatTimeDuration(ms: number): string {
 }
 
 export function timeAgo(dateInput: string | Date): string {
+  const agoLabel = (count: number, unit: string) =>
+    count === 1 ? `1 ${unit} ago` : `${count} ${unit}s ago`;
+
   try {
     const inputDate = new Date(dateInput);
     if (isNaN(inputDate.getTime())) throw new Error("Invalid date");
@@ -40,17 +43,14 @@ export function timeAgo(dateInput: string | Date): string {
     const hoursAgo = Math.floor(minutesAgo / 60);
     const daysAgo = Math.floor(hoursAgo / 24);
     if (secondsAgo < 5) return "just now";
-    if (secondsAgo < 60) return `${secondsAgo} seconds ago`;
-    if (minutesAgo < 60) return `${minutesAgo} minutes ago`;
-    if (hoursAgo < 24) {
-      if (hoursAgo === 1) return "1 hour ago";
-      else return `${hoursAgo} hours ago`;
-    }
-    if (daysAgo < 30) return `${daysAgo} days ago`;
+    if (secondsAgo < 60) return agoLabel(secondsAgo, "second");
+    if (minutesAgo < 60) return agoLabel(minutesAgo, "minute");
+    if (hoursAgo < 24) return agoLabel(hoursAgo, "hour");
+    if (daysAgo < 30) return agoLabel(daysAgo, "day");
     const monthsAgo = Math.floor(daysAgo / 30);
-    if (monthsAgo < 12) return `${monthsAgo} months ago`;
+    if (monthsAgo < 12) return agoLabel(monthsAgo, "month");
     const yearsAgo = Math.floor(monthsAgo / 12);
-    return `${yearsAgo} years ago`;
+    return agoLabel(yearsAgo, "year");
   } catch (err) {
     console.error("timeAgo error:", err);
     return "invalid date";
@@ -138,6 +138,113 @@ export function formatApiDateShort(raw: unknown): string {
     return formatDateShort(d);
   } catch {
     return "";
+  }
+}
+
+/** Compact match-feed dates: Today, Yesterday, 2h ago, 24 May. */
+export function formatFeedRelativeDate(raw: unknown): string {
+  if (raw == null || raw === "") return "";
+  try {
+    let d: Date;
+    if (raw instanceof Date) {
+      d = raw;
+    } else if (typeof raw === "string" || typeof raw === "number") {
+      d = new Date(raw);
+    } else if (typeof raw === "object" && raw !== null) {
+      const o = raw as Record<string, unknown>;
+      if (o.$date == null) return "";
+      return formatFeedRelativeDate(o.$date);
+    } else {
+      return "";
+    }
+    if (Number.isNaN(d.getTime())) return "";
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfThatDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayDiff = Math.round(
+      (startOfToday.getTime() - startOfThatDay.getTime()) / (24 * 60 * 60 * 1000),
+    );
+
+    if (dayDiff === 0) {
+      const minutesAgo = Math.floor((now.getTime() - d.getTime()) / 60000);
+      if (minutesAgo < 1) return "Just now";
+      if (minutesAgo < 60) return `${minutesAgo}m ago`;
+      const hoursAgo = Math.floor(minutesAgo / 60);
+      if (hoursAgo < 12) return `${hoursAgo}h ago`;
+      return "Today";
+    }
+    if (dayDiff === 1) return "Yesterday";
+    if (dayDiff > 1 && dayDiff < 7) return `${dayDiff}d ago`;
+
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Tournament start/end label tuned for sports feeds:
+ * Today, Tomorrow, Starts in 5 days, 3 days left, 12 May.
+ */
+export function formatTournamentScheduleLabel(
+  startRaw: unknown,
+  opts?: { endRaw?: unknown; status?: string },
+): string {
+  if (startRaw == null || startRaw === "") return "";
+  try {
+    const start = startRaw instanceof Date ? startRaw : new Date(startRaw as string | number);
+    if (Number.isNaN(start.getTime())) return "";
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfEvent = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const dayDiff = Math.round(
+      (startOfEvent.getTime() - startOfToday.getTime()) / (24 * 60 * 60 * 1000),
+    );
+
+    if (opts?.status === "in_progress" || opts?.status === "ongoing") {
+      return "Live now";
+    }
+    if (opts?.status === "completed") {
+      return formatFeedRelativeDate(startRaw) || "Completed";
+    }
+
+    if (dayDiff === 0) {
+      const ms = start.getTime() - now.getTime();
+      if (ms > 0 && ms < 24 * 60 * 60 * 1000) {
+        const hours = Math.max(1, Math.round(ms / (60 * 60 * 1000)));
+        return hours < 24 ? `Starts in ${hours}h` : "Today";
+      }
+      return "Today";
+    }
+    if (dayDiff === 1) return "Tomorrow";
+    if (dayDiff > 1 && dayDiff <= 14) return `Starts in ${dayDiff} days`;
+    if (dayDiff < 0 && dayDiff >= -7) {
+      const left = Math.abs(dayDiff);
+      return left === 0 ? "Today" : `${left} day${left === 1 ? "" : "s"} left`;
+    }
+
+    return start.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  } catch {
+    return "";
+  }
+}
+
+/** Elapsed label for live matches, e.g. "14 min". */
+export function formatLiveElapsed(raw: unknown): string | null {
+  if (raw == null || raw === "") return null;
+  try {
+    const d = raw instanceof Date ? raw : new Date(raw as string | number);
+    if (Number.isNaN(d.getTime())) return null;
+    const minutes = Math.max(0, Math.floor((Date.now() - d.getTime()) / 60000));
+    if (minutes < 1) return "just started";
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const rem = minutes % 60;
+    return rem > 0 ? `${hours}h ${rem}m` : `${hours}h`;
+  } catch {
+    return null;
   }
 }
 

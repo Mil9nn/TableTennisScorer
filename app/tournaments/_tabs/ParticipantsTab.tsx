@@ -43,43 +43,47 @@ export const ParticipantsTab: React.FC<ParticipantsTabProps> = ({
       </View>
       <View style={styles.contentCardBody}>
         <View style={styles.participantsGrid}>
-          {(tournament.participants || []).map((p: any, index: number) => {
-            const seed = tournament.seeding?.find(
-              (s: any) => s.participant?._id === p._id,
-            );
+          {(tournament.participants || []).map((p: any) => {
             const isTeam = isTeamParticipant(p);
             const displayName = getParticipantDisplayName(p);
             const image = getParticipantImage(p);
-            const subtext = isTeam
+            const primaryName = isTeam
+              ? displayName
+              : (p as any).fullName || (p as any).username || "Unknown";
+            const secondaryText = isTeam
               ? (p as any).city ||
-              `${(p as any).players?.length || 0} players`
-              : `@${(p as any).username || "unknown"}`;
+                `${(p as any).players?.length || 0} players`
+              : (p as any).username
+                ? `@${(p as any).username}`
+                : undefined;
 
             return (
               <Animated.View
                 key={p._id}
                 style={[
                   styles.participantCard,
-                  { transform: [{ scale: scaleAnim }] }
+                  { transform: [{ scale: scaleAnim }] },
                 ]}
               >
                 <Pressable
                   onPress={() => onParticipantPress(p)}
                   style={({ pressed }) => [
                     styles.participantCardInner,
-                    pressed && { opacity: 0.7 },
+                    pressed && styles.participantCardPressed,
                   ]}
                 >
-                  <View style={styles.participantAvatar}>
+                  <View style={styles.participantLeft}>
                     <Avatar src={image} alt={displayName} size={40} />
-                  </View>
-                  <View style={styles.participantInfo}>
-                    <Text style={styles.participantName} numberOfLines={1}>
-                      {displayName}
-                    </Text>
-                    <Text style={styles.participantSubtext} numberOfLines={1}>
-                      {subtext}
-                    </Text>
+                    <View style={styles.participantInfo}>
+                      <Text style={styles.participantName} numberOfLines={1}>
+                        {primaryName}
+                      </Text>
+                      {secondaryText ? (
+                        <Text style={styles.participantSubtext} numberOfLines={1}>
+                          {secondaryText}
+                        </Text>
+                      ) : null}
+                    </View>
                   </View>
                 </Pressable>
               </Animated.View>
@@ -129,35 +133,42 @@ const styles = StyleSheet.create({
   contentCardBody: {},
   participantsGrid: {
     flexDirection: "column",
+    gap: tokens.spacing[2],
   },
   participantCard: {
-    minWidth: "45%",
+    width: "100%",
   },
   participantCardInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: tokens.spacing[6],
     padding: tokens.spacing[4],
     backgroundColor: tokens.colors.background.secondary,
     borderWidth: 1,
     borderColor: tokens.colors.border.light,
+    borderRadius: tokens.borderRadius.base,
   },
-  participantAvatar: {
-    flexShrink: 0,
+  participantCardPressed: {
+    opacity: 0.7,
+  },
+  participantLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: tokens.spacing[4],
+    flex: 1,
+    minWidth: 0,
   },
   participantInfo: {
     flex: 1,
     minWidth: 0,
+    justifyContent: "center",
   },
   participantName: {
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.semibold,
     color: tokens.colors.text.primary,
-    marginBottom: tokens.spacing[2],
   },
   participantSubtext: {
     fontSize: tokens.typography.fontSize.xs,
     color: tokens.colors.text.secondary,
+    marginTop: 2,
   },
   seedBadge: {
     backgroundColor: tokens.colors.primary[100],

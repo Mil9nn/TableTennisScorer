@@ -1,23 +1,26 @@
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeColors } from "@/hooks/useThemeColors";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const insets = useSafeAreaInsets();
+  const theme = useThemeColors();
   const user = useAuthStore((state) => state.user);
   const authLoading = useAuthStore((state) => state.authLoading);
 
   if (authLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.colors.background.primary,
+        }}
+      >
+        <ActivityIndicator size="large" color={theme.colors.primary[600]} />
       </View>
     );
   }
@@ -26,65 +29,5 @@ export default function TabLayout() {
     return <Redirect href="/auth/login" />;
   }
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
-        tabBarStyle: {
-          height: 55 + insets.bottom,
-          paddingBottom: insets.bottom,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="home" size={18} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="matches"
-        options={{
-          title: "Matches",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="table-tennis" size={18} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="tournaments"
-        options={{
-          title: "Tournaments",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="trophy" size={18} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="teams"
-        options={{
-          title: "Teams",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome5 name="users" size={18} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="user" size={18} color={color} solid />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+  return <Slot />;
 }

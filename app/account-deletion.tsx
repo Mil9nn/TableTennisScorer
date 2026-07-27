@@ -16,7 +16,7 @@ import { DesignTokens } from "@/constants/designTokens";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 const DELETED_ITEMS = [
-  "Profile information (name, email, photo, bio)",
+  "Profile information (name, email, photo)",
   "Login credentials and verification data",
   "Player statistics and subscription records",
   "Team and tournament memberships",
